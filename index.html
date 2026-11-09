@@ -11,10 +11,10 @@
 <title>Guide Tuner</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* Layout: pannello strumenti. Barra file e setup in alto, riepilogo della notte, schede delle sessioni,
-   grafici in griglia (largo / due colonne), tabella dei consigli per ASIAIR, note sul metodo in fondo. */
+/* Layout: tool panel. File and setup bar at the top, night summary, session tabs,
+   charts in a grid (wide / two columns), table of ASIAIR recommendations, method notes at the bottom. */
 :root {
-  /* tema chiaro: grigio-azzurro tenue invece del bianco pieno, meno abbagliante */
+  /* light theme: soft blue-grey instead of pure white, less glaring */
   --bg: #d0d6e0;
   --surface: #e1e5ec;
   --ink: #0f141d;
@@ -40,7 +40,7 @@
   --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
-/* tema scuro: grigio-blu ardesia invece del quasi nero, piu' leggero da guardare */
+/* dark theme: slate blue-grey instead of near-black, easier on the eyes */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #1e2635; --surface: #283246; --ink: #f0f3f8; --ink-2: #c7cfdc; --muted: #9ca7b8;
@@ -119,8 +119,8 @@ header.top { display: grid; gap: 18px; }
 .btnrow { display: flex; flex-wrap: wrap; gap: 8px; }
 .hint { font-size: 0.85rem; color: var(--muted); }
 .setup { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-content: start; }
-/* etichetta e campo in fondo alla cella: se un'etichetta va a capo (succede in inglese o su schermi stretti)
-   i campi della stessa riga restano allineati */
+/* label and field at the bottom of the cell: if a label wraps (in English or on narrow screens)
+   the fields in the same row stay aligned */
 .field { display: grid; gap: 4px; min-width: 0; align-content: end; }
 .field label { font-size: 0.8rem; color: var(--ink-2); }
 .field input, .field select {
@@ -285,7 +285,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
         </div>
       </div>
     </div>
-    <p class="lede" data-i18n="lede">Apri un file <span class="mono">PHD2_GuideLog_….txt</span> dalla cartella <span class="mono">log</span> dell'ASIAIR. La pagina ricostruisce come si muoveva la montatura senza guida, misura l'errore periodico e rigioca la notte con impostazioni diverse per suggerire quelle migliori. Il file viene letto nel browser e non lascia il tuo computer. <a href="#come" data-open="hBrief">Come funziona ↓</a></p>
+    <p class="lede" data-i18n="lede">Apri un file <span class="mono">PHD2_GuideLog_….txt</span> dalla cartella <span class="mono">log</span> dell'ASIAIR. La pagina ricostruisce come si muoveva la montatura senza guida, misura l'errore periodico e simula la stessa notte con impostazioni diverse per suggerire quelle migliori. Il file viene letto nel browser e non lascia il tuo computer. <a href="#come" data-open="hBrief">Come funziona ↓</a></p>
     <div class="controls">
       <div class="filebox">
         <div class="btnrow">
@@ -404,11 +404,11 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
 <script type="text/plain" id="sample-log"></script>
 <script>
 "use strict";
-// ============================================================ lingua / language
-// "auto": scelta salvata, altrimenti la lingua del browser (italiano -> IT, il resto -> EN).
-// build.mjs mette "en" nella versione locale inglese.
+// ============================================================ language
+// "auto": saved choice, otherwise the browser language (Italian -> IT, anything else -> EN).
+// build.mjs sets "en" in the English local version.
 const LANG_DEFAULT = "auto";
-const DOWNLOAD_FILE = ""; // build.mjs lo imposta nella versione condivisa online (file locale da scaricare)
+const DOWNLOAD_FILE = ""; // build.mjs sets it in the shared online version (local file to download)
 const LANG_KEY = "guida-lang" + (LANG_DEFAULT === "auto" ? "" : "-" + LANG_DEFAULT);
 let LANG = (() => {
   try { const s = localStorage.getItem(LANG_KEY); if (s === "it" || s === "en") return s; } catch (e) {}
@@ -416,7 +416,7 @@ let LANG = (() => {
   return /^it\b/i.test(navigator.language || "") ? "it" : "en";
 })();
 const T = (it, en) => (LANG === "en" ? en : it);
-// testi fissi della pagina in inglese (l'italiano e' quello scritto nell'HTML)
+// fixed page texts in English (the Italian ones are those written in the HTML)
 const EN_STATIC = {
   tagline: "Better ASIAIR guiding settings, from your guide log",
   lede: 'Open a <span class="mono">PHD2_GuideLog_….txt</span> file from the ASIAIR <span class="mono">log</span> folder. The page reconstructs how the mount moved without guiding, measures the periodic error and replays the night with different settings to suggest the best ones. The file is read in your browser and never leaves your computer. <a href="#come" data-open="hBrief">How it works ↓</a>',
@@ -517,10 +517,10 @@ function parseLog(text) {
   const lines = text.split(/\r?\n/);
   const sessions = [], calibrations = [];
   let cur = null, cal = null, settling = false;
-  let ncol = 18, dropped = 0; // colonne della tabella dei frame (dall'intestazione "Frame,Time,...")
+  let ncol = 18, dropped = 0; // columns of the frame table (from the "Frame,Time,..." header)
   const num = (re, s) => { const m = s.match(re); return m ? parseFloat(m[1]) : null; };
-  // ASIAIR scrive "Dec = 27.7 deg, Hour angle = ...", PHD2 per PC "RA = 7.64 hr, Dec = -14.5 deg, Hour angle = ...";
-  // senza posizione della montatura i valori possono essere "N/A" o mancare (Dec resta null: vedi analyzeSession)
+  // ASIAIR writes "Dec = 27.7 deg, Hour angle = ...", PHD2 desktop "RA = 7.64 hr, Dec = -14.5 deg, Hour angle = ...";
+  // without the mount position the values can be "N/A" or missing (Dec stays null: see analyzeSession)
   const posLine = (s) => /^(RA = [^,]*, )?Dec = /.test(s);
   for (const line of lines) {
     if (line.startsWith("Frame,Time,")) { ncol = line.split(",").length; continue; }
@@ -538,7 +538,7 @@ function parseLog(text) {
     }
     if (line.startsWith("Guiding Begins")) {
       cal = null;
-      // calN: quante calibrazioni c'erano gia' nel log quando e' partita questa sessione (vale l'ultima completa)
+      // calN: how many calibrations were already in the log when this session started (the last complete one applies)
       cur = { start: line.slice(18).trim(), end: null, p: {}, frames: [], events: [], calN: calibrations.length };
       sessions.push(cur); settling = false; continue;
     }
@@ -559,7 +559,7 @@ function parseLog(text) {
       p.xMinMo = num(/Minimum move = ([\d.]+)/, line) ?? 0.1;
     }
     if (line.startsWith("Y guide algorithm")) {
-      p.yAlgo = (line.match(/= ([^,]+)/) || [])[1]?.trim(); // anche "None" (guida DEC spenta), che non ha virgola
+      p.yAlgo = (line.match(/= ([^,]+)/) || [])[1]?.trim(); // also "None" (DEC guiding off), which has no comma
       p.yMinMo = num(/Minimum move = ([\d.]+)/, line) ?? 0.1;
       const a = num(/Aggression = ([\d.]+)%/, line);
       p.yAggr = a == null ? null : a / 100;
@@ -586,7 +586,7 @@ function parseLog(text) {
     }
     if (/^\d+,/.test(line)) {
       const f = line.split(",");
-      // riga incompleta (tipicamente l'ultima, se ASIAIR la sta ancora scrivendo): ignorala
+      // incomplete line (typically the last one, if ASIAIR is still writing it): ignore it
       if (f.length < ncol || f[ncol - 1].trim() === "" || !isFinite(+f[1])) { dropped++; continue; }
       const g = (i) => (f[i] === "" || f[i] === undefined ? 0 : parseFloat(f[i]));
       cur.frames.push({
@@ -615,12 +615,12 @@ function makeResistSwitch(aggr, minMo) {
     return r * aggr;
   };
 }
-// Ogni impulso si considera finito prima della posa successiva: PHD2 e ASIAIR aspettano la fine
-// dell'impulso prima di riprendere (nei log l'intervallo tra i frame si allunga quando ci sono impulsi,
-// es. AM5N con pose da 0,5 s: 0,5-0,9 s). Ricostruzione e simulazione usano la stessa ipotesi.
-// (Fino all'8/11/2026 c'era una funzione phiOf per la parte di impulso dentro la posa successiva, ma
-// la parte "in sospeso" veniva comunque applicata subito: era senza effetto, quindi e' stata tolta.)
-// sg (facoltativo): riceve la direzione di ogni correzione (-1, 0, +1), per studiare il comportamento
+// Each pulse is assumed to end before the next exposure: PHD2 and ASIAIR wait for the pulse to end
+// before resuming (in the logs the interval between frames gets longer when there are pulses,
+// e.g. AM5N with 0.5 s exposures: 0.5-0.9 s). Reconstruction and simulation use the same assumption.
+// (Until 8 Nov 2026 there was a phiOf function for the part of a pulse falling inside the next exposure, but
+// the "pending" part was applied immediately anyway: it had no effect, so it was removed.)
+// sg (optional): receives the direction of each correction (-1, 0, +1), to study the behaviour
 function replaySeg(u, algo, rateAssumed, rateTrue, maxDurMs, E, sg) {
   const e = []; let C = 0;
   for (let k = 0; k < u.length; k++) {
@@ -632,15 +632,15 @@ function replaySeg(u, algo, rateAssumed, rateTrue, maxDurMs, E, sg) {
   return e;
 }
 
-// Comportamento del grafico (i segni che si guardano a occhio nel grafico di ASIAIR):
-// - runs: quota di correzioni che fanno parte di serie di 4 o piu' nella stessa direzione
-//   (la guida arriva in ritardo: aggressivita' bassa)
-// - flips: quota di correzioni seguite subito da una in direzione opposta (la linea rimbalza oltre
-//   lo zero: aggressivita' alta)
-// - ac1: somiglianza tra un punto e il precedente (autocorrelazione); 0 = nessun andamento, la linea
-//   e' solo rumore; vicino a 1 = la linea si allontana dallo zero e ci resta
-// - rate: quota di frame con una correzione
-// segE e segS sono liste di tratti stabili (errori e direzioni delle correzioni)
+// Graph behaviour (the signs you look for by eye in the ASIAIR graph):
+// - runs: share of corrections that are part of series of 4 or more in the same direction
+//   (guiding arrives late: aggressiveness too low)
+// - flips: share of corrections immediately followed by one in the opposite direction (the line bounces past
+//   zero: aggressiveness too high)
+// - ac1: similarity between a point and the previous one (autocorrelation); 0 = no trend, the line
+//   is just noise; close to 1 = the line drifts away from zero and stays there
+// - rate: share of frames with a correction
+// segE and segS are lists of stable segments (errors and correction directions)
 const RUN_LONG = 4, FLIP_MAX = 0.12, RUNS_HIGH = 0.25;
 function behaviorOf(segE, segS) {
   let acN = 0, acW = 0, pulses = 0, flips = 0, inLong = 0, frames = 0;
@@ -663,19 +663,19 @@ function behaviorOf(segE, segS) {
   return { ac1: acW ? acN / acW : null, runs: pulses ? inLong / pulses : null, flips: pulses ? flips / pulses : null, rate: frames ? pulses / frames : null };
 }
 
-// Periodo dell'errore periodico. Per ogni periodo candidato P (da 60 s fino a 1000 s, ma al massimo
-// un terzo della sessione) il moto viene diviso in cicli completi e ripiegato. Il punteggio e' la
-// varieta' della curva media MENO quanto i singoli cicli differiscono tra loro (stima della parte
-// davvero periodica): una deriva lenta da' una curva media ampia ma cicli tutti diversi, quindi
-// punteggio basso. Cosi' si possono cercare periodi lunghi (montature a vite senza fine) senza
-// scambiare le derive per periodi.
+// Period of the periodic error. For each candidate period P (from 60 s up to 1000 s, but at most
+// a third of the session) the motion is split into complete cycles and folded. The score is the
+// spread of the mean curve MINUS how much the individual cycles differ from each other (estimate of the part
+// that is truly periodic): a slow drift gives a large mean curve but cycles that are all different, hence
+// a low score. This way long periods (worm gear mounts) can be searched for without
+// mistaking drifts for periods.
 const PE_MIN = 60, PE_MAX = 1000, PE_STEP = 0.5;
-// Montature note: periodo dell'errore periodico e limite dichiarati (± secondi d'arco equatoriali).
-// Dati del produttore o dei rivenditori, verificati il 6/11/2026: AM3 ±20″ e AM3N ±15″ con periodo 288 s,
-// AM5 ±20″ e AM5N ±10″ con periodo 288 s (ZWO, "My experience with ZWO AM5 and AM5N mounts", 1/8/2024:
-// "the AM5N ... ±10″ with the same duration [288s]"; corretto l'8/11/2026, prima qui c'era 432 s, smentito
-// anche dai log AM5N: 284-287 s su 4 notti), AM7 ±10″ con periodo 288 s; EQ6-R: ruota da 180 denti,
-// 86164 s / 180 = 478,7 s (limite non dichiarato). L'ordine conta: AM3N prima di AM3, ecc.
+// Known mounts: stated periodic error period and limit (± equatorial arcseconds).
+// Manufacturer or retailer data, checked on 6 Nov 2026: AM3 ±20″ and AM3N ±15″ with period 288 s,
+// AM5 ±20″ and AM5N ±10″ with period 288 s (ZWO, "My experience with ZWO AM5 and AM5N mounts", 1 Aug 2024:
+// "the AM5N ... ±10″ with the same duration [288s]"; fixed on 8 Nov 2026, this used to say 432 s, also contradicted
+// by the AM5N logs: 284-287 s over 4 nights), AM7 ±10″ with period 288 s; EQ6-R: 180-tooth worm wheel,
+// 86164 s / 180 = 478.7 s (limit not stated). Order matters: AM3N before AM3, etc.
 const MOUNTS = [
   { re: /AM3N/i, name: "ZWO AM3N", period: 288, pe: 15 },
   { re: /AM3/i, name: "ZWO AM3", period: 288, pe: 20 },
@@ -714,8 +714,8 @@ function peScan(t, y) {
   }
   return { scan, upTo: pMax, hp, span };
 }
-// il periodo piu' corto tra i massimi locali forti (>= 90% del massimo): evita di scegliere 2P o 3P,
-// che ripiegano la stessa curva e hanno quasi lo stesso punteggio
+// the shortest period among the strong local maxima (>= 90% of the maximum): avoids picking 2P or 3P,
+// which fold the same curve and have almost the same score
 function pickPeriod(scan) {
   if (!scan || !scan.length) return null;
   const vmax = Math.max(...scan.map((x) => x[1]));
@@ -726,7 +726,7 @@ function pickPeriod(scan) {
   }
   return P;
 }
-// curva media, ampiezza e armoniche al periodo P
+// mean curve, amplitude and harmonics at period P
 function peCurve(t, hp, dec, P, upTo) {
   const span = t[t.length - 1] - t[0];
   const NB = 48;
@@ -752,22 +752,22 @@ function peCurve(t, hp, dec, P, upTo) {
 
 const AGGRS = []; for (let a = 30; a <= 100; a += 5) AGGRS.push(a / 100);
 
-// Salti improvvisi dell'errore (problema meccanico, vento, cavi): non dipendono dalle impostazioni di guida.
-// Dispersione "robusta" dell'errore (dalla mediana, che i salti non spostano): con una guida normale l'RMS
-// e' circa 1,1-1,5 volte questa; con i salti 3-5 volte. Un salto e' un tratto con |errore| oltre
-// max(5", 8 x dispersione); se la DEC resta sotto meta' soglia nello stesso tratto, il salto e' solo in RA.
-// Tarato il 7/11/2026 su log ASIAIR di AM3N (nessun salto) e AM5N (sere buone 0-1 salti oltre 8" per
-// sessione; lato con il problema 6-31 salti all'ora fino a 48").
-// JUMP_RATIO abbassato da 2 a 1,6 l'8/11/2026 con i log finti (sviluppo\test\log_sintetico.mjs): salti di 12″
-// ogni 288 s raddoppiano l'RMS ma danno un rapporto di 1,76-1,81, che con 2 sfuggiva. Fasi buone dei log reali:
-// al massimo 1,47 (AM5N 25/3 S13, dopo il flip), e comunque restano sotto i conteggi minimi.
+// Sudden error jumps (mechanical problem, wind, cables): they don't depend on the guiding settings.
+// "Robust" spread of the error (from the median, which jumps don't shift): with normal guiding the RMS
+// is about 1.1-1.5 times this; with jumps 3-5 times. A jump is a stretch with |error| above
+// max(5", 8 x spread); if DEC stays below half the threshold in the same stretch, the jump is RA only.
+// Tuned on 7 Nov 2026 on ASIAIR logs from AM3N (no jumps) and AM5N (good nights 0-1 jumps above 8" per
+// session; side with the problem 6-31 jumps per hour, up to 48").
+// JUMP_RATIO lowered from 2 to 1.6 on 8 Nov 2026 with the fake logs (sviluppo\test\log_sintetico.mjs): 12″ jumps
+// every 288 s double the RMS but give a ratio of 1.76-1.81, which slipped through with 2. Good phases of real logs:
+// at most 1.47 (AM5N 25 Mar S13, after the flip), and they stay below the minimum counts anyway.
 const JUMP_RATIO = 1.6, JUMP_MIN_N = 3, JUMP_MIN_PER_H = 4;
-// istanti dei salti (per la periodicita'): un salto e il suo rimbalzo entro 60 s contano come uno
+// jump times (for periodicity): a jump and its rebound within 60 s count as one
 const JUMP_MERGE_S = 60;
 function findJumps(ra, dec, hours, times) {
   const robust = (a) => 1.4826 * median(a.map(Math.abs));
   const sR = robust(ra), sD = robust(dec);
-  // dispersione nulla (log simulati o con errori arrotondati a zero): il confronto non ha senso
+  // zero spread (simulated logs or errors rounded to zero): the comparison makes no sense
   if (!(sR > 0) || !(sD > 0) || !(hours > 0)) return null;
   const thr = Math.max(5, 8 * sR), thrD = Math.max(5, 8 * sD);
   let n = 0, raOnly = 0, inE = false, maxDec = 0, i0 = 0;
@@ -787,17 +787,17 @@ function findJumps(ra, dec, hours, times) {
   const ratio = rms(ra) / sR, ratioD = rms(dec) / sD;
   const peak = Math.max(...ra.map(Math.abs));
   const flag = ratio >= JUMP_RATIO && raOnly >= JUMP_MIN_N && raOnly / hours >= JUMP_MIN_PER_H;
-  // anche la DEC salta spesso: piu' probabile vento, urti o cavi che tirano
+  // DEC also jumps often: more likely wind, knocks or cables pulling
   const both = flag && ratioD >= JUMP_RATIO && nD / hours >= JUMP_MIN_PER_H;
   return { n, raOnly, hours, perHour: raOnly / hours, peak, thr, ratio, ratioD, nD, flag, both, times: ev };
 }
-// Salti che tornano col periodo dell'errore periodico (un punto preciso di un pezzo che gira): si mette ogni
-// salto su un cerchio (fase = istante / periodo) e si misura quanto le fasi si raccolgono nello stesso punto,
-// fase di guida per fase di guida (ogni fase ha il suo zero dei tempi). Indice z = media sulle k fasi di
-// |somma dei versori|^2 / n: per salti a caso segue una Gamma(k, 1/k) (media 1), quindi la probabilita' che
-// venga cosi' alto per caso si calcola. Si prova solo il periodo gia' trovato (±3% per l'incertezza della
-// stima), non tutti i periodi possibili: cosi' non si trovano coincidenze per caso.
-// Tarato l'8/11/2026: AM5N 14/3 e 25/3 salti ogni ~288 s come l'errore periodico (sviluppo\test\test_salti_periodo.mjs).
+// Jumps that recur with the periodic error period (one specific spot on a rotating part): each
+// jump is placed on a circle (phase = time / period) and we measure how much the phases cluster at the same point,
+// guiding phase by guiding phase (each phase has its own time zero). Index z = mean over the k phases of
+// |sum of unit vectors|^2 / n: for random jumps it follows a Gamma(k, 1/k) (mean 1), so the probability of
+// getting this high by chance can be computed. Only the period already found is tested (±3% for the uncertainty of the
+// estimate), not every possible period: this way no chance coincidences are found.
+// Tuned on 8 Nov 2026: AM5N 14 Mar and 25 Mar, jumps every ~288 s like the periodic error (sviluppo\test\test_salti_periodo.mjs).
 const JUMP_PER_P = 0.001;
 function jumpPeriodZ(runs, P) {
   return runs.reduce((a, ts) => {
@@ -805,7 +805,7 @@ function jumpPeriodZ(runs, P) {
     return a + (c * c + s * s) / ts.length;
   }, 0) / runs.length;
 }
-// probabilita' che una Gamma(k, 1/k) superi z
+// probability that a Gamma(k, 1/k) exceeds z
 function gammaTail(k, z) { const x = k * z; let term = 1, sum = 1; for (let j = 1; j < k; j++) { term *= x / j; sum += term; } return Math.exp(-x) * sum; }
 function jumpPeriod(hit, pe) {
   if (!(pe > 0)) return null;
@@ -814,13 +814,13 @@ function jumpPeriod(hit, pe) {
   if (n < 8) return null;
   let best = [pe, 0];
   for (let P = 0.97 * pe; P <= 1.03 * pe; P += 0.5) { const z = jumpPeriodZ(runs, P); if (z > best[1]) best = [P, z]; }
-  // circa 3 periodi indipendenti nella finestra del ±3%
+  // about 3 independent periods in the ±3% window
   const p = Math.min(1, 3 * gammaTail(runs.length, best[1]));
   return p <= JUMP_PER_P ? { period: best[0], z: best[1], n, p } : null;
 }
-// fase con salti: esclusa da consigli, confronto tra velocita', periodo della notte e avvisi sulle impostazioni
+// phase with jumps: left out of recommendations, guide rate comparison, night period and settings warnings
 const jumpy = (s) => !!s.jumps?.flag;
-// Riepilogo dei salti nella notte: sessioni colpite, lato della montatura (se succede da una parte sola)
+// Summary of the jumps in the night: affected sessions, mount side (if it happens on one side only)
 function jumpSummary(A) {
   const checked = A.results.filter((s) => !s.skipped && s.jumps);
   const hit = checked.filter(jumpy);
@@ -828,10 +828,10 @@ function jumpSummary(A) {
   const clean = checked.filter((s) => !jumpy(s));
   const sides = new Set(hit.map((s) => s.p.pier));
   const side = sides.size === 1 && !sides.has(null) && !sides.has(undefined) ? [...sides][0] : null;
-  // il lato conta solo se dall'altra parte c'e' almeno una sessione pulita
+  // the side only counts if there is at least one clean session on the other side
   const otherOk = side && clean.some((s) => s.p.pier && s.p.pier !== side);
-  // Dove sta l'oggetto. Nei log ASIAIR "Pier side = West" va con angolo orario negativo, cioe' oggetto
-  // a Est del meridiano (prima del flip): verificato su log AM3N e AM5N. Si usa l'angolo orario se c'e'.
+  // Where the target is. In ASIAIR logs "Pier side = West" goes with a negative hour angle, i.e. target
+  // east of the meridian (before the flip): checked on AM3N and AM5N logs. The hour angle is used if present.
   const has = hit.filter((s) => s.p.ha != null);
   const objEast = has.length ? median(has.map((s) => s.p.ha)) < 0 : side === "West";
   const h = hit.reduce((a, s) => a + s.jumps.hours, 0);
@@ -839,7 +839,7 @@ function jumpSummary(A) {
     peak: Math.max(...hit.map((s) => s.jumps.peak)), perHour: hit.reduce((a, s) => a + s.jumps.raOnly, 0) / h,
     worstRms: Math.max(...hit.map((s) => s.perf.raRms)), cleanRms: clean.length ? Math.max(...clean.map((s) => s.perf.raRms)) : null };
 }
-// testi dell'avviso salti (vista Semplice, Completa e avvisi immediati)
+// texts of the jumps warning (Simple view, Full view and early warnings)
 function jumpText(J) {
   const ss = J.hit.map((s) => "S" + s.idx).join(", ");
   const objIt = J.objEast ? "Est" : "Ovest", otherIt = J.objEast ? "Ovest" : "Est";
@@ -869,22 +869,22 @@ function jumpText(J) {
   return { param, set, why };
 }
 
-// Notte che peggiora (8/11/2026, log PHD2 per PC con OnStep: RMS 1,9" nella prima mezz'ora, poi nuvole o
-// oggetto basso, stella persa per ore). Ogni fase di guida si divide in blocchi di 30 minuti; i blocchi di tutte
-// le fasi si mettono in fila (le notti ASIAIR sono spesso fasi da un'ora, tra un autofocus e l'altro).
-// Un blocco e' "peggiorato" se la stella si perde in almeno il 30% dei frame, oppure se l'errore totale e' almeno
-// il doppio di quello del primo blocco buono (e almeno 0,5" in piu'). Serve almeno un'ora peggiorata in tutto:
-// una nuvola che passa non conta.
+// Night that gets worse (8 Nov 2026, PHD2 desktop log with OnStep: RMS 1.9" in the first half hour, then clouds or
+// low target, star lost for hours). Each guiding phase is split into 30-minute blocks; the blocks of all
+// phases are lined up (ASIAIR nights are often one-hour phases, between one autofocus and the next).
+// A block is "worse" if the star is lost in at least 30% of the frames, or if the total error is at least
+// twice that of the reference block (and at least 0.5" more). At least one worse hour in total is needed:
+// a passing cloud doesn't count.
 const TREND_BLOCK_S = 1800, TREND_LOST = 0.3, TREND_RATIO = 2, TREND_MIN_BAD_S = 3600;
 const clockAdd = (start, sec) => {
   const m = (start || "").match(/(\d+):(\d+):(\d+)/); if (!m) return "";
   const t = (((+m[1] * 3600 + +m[2] * 60 + +m[3] + sec) % 86400) + 86400) % 86400;
   return String(Math.floor(t / 3600)).padStart(2, "0") + ":" + String(Math.floor((t % 3600) / 60)).padStart(2, "0");
 };
-// Frame usabile. Codice 1 = stella saturata: PHD2 la usa lo stesso e manda la correzione (log PHD2 per PC
-// AstroBin 15/8/2024: 538 frame su 863). Nei log ASIAIR provati non compare mai.
+// Usable frame. Code 1 = saturated star: PHD2 uses it anyway and sends the correction (PHD2 desktop log
+// AstroBin 15 Aug 2024: 538 frames out of 863). It never appears in the ASIAIR logs tested.
 const okFrame = (f) => f.mount === "Mount" && (f.err === 0 || f.err === 1);
-// blocchi di una fase di guida: frame totali e buoni (errori in ″), esclusi i tratti di assestamento dopo i dither
+// blocks of a guiding phase: total and good frames (errors in ″), excluding the settling stretches after dithers
 function sessionBlocks(frames, scale) {
   const fr = frames.filter((f) => !f.settling && isFinite(f.t));
   const blocks = [];
@@ -907,17 +907,17 @@ function nightTrend(A) {
   }
   blocks.sort((a, b) => a.abs - b.abs);
   if (blocks.length < 3) return null;
-  // riferimento: il migliore dei primi due blocchi buoni (una prima mezz'ora storta non deve nascondere il resto)
+  // reference: the best of the first two good blocks (a bad first half hour must not hide the rest)
   const refs = blocks.filter((B) => B.rms != null && B.lost < TREND_LOST).slice(0, 2);
   if (!refs.length) return null;
   const ref = refs.reduce((a, B) => (B.rms < a.rms ? B : a));
-  // nelle fasi con i salti l'RMS sale per la meccanica: li conta solo la stella persa
+  // in phases with jumps the RMS rises because of the mechanics: there only the lost star counts
   const isBad = (B) => B.lost >= TREND_LOST || (!jumpy(B.s) && B.rms != null && B.rms >= TREND_RATIO * ref.rms && B.rms - ref.rms >= 0.5);
   const bad = blocks.filter((B) => B.abs > refs[0].abs && B !== ref && isBad(B));
   const dur = (B) => Math.max(B.t1 - B.t0, 0);
   const badS = bad.reduce((a, B) => a + dur(B), 0);
   if (badS < TREND_MIN_BAD_S) return null;
-  // coda finale con la stella persa quasi sempre: la guida e' rimasta accesa senza stella (si racconta a parte)
+  // final tail with the star lost almost all the time: guiding stayed on without a star (reported separately)
   let deadI = blocks.length; while (deadI > 0 && blocks[deadI - 1].lost >= 0.95) deadI--;
   const deadS = blocks.slice(deadI).reduce((a, B) => a + dur(B), 0);
   const dead = deadS >= 3600 ? new Set(blocks.slice(deadI)) : new Set();
@@ -951,25 +951,25 @@ function trendText(W) {
 
 function analyzeSession(s, idx, ref) {
   const p = s.p;
-  // Dec sconosciuta (PHD2 per PC senza la posizione della montatura, per esempio guida via ST4): si assume quella
-  // della calibrazione, cioe' nessun ricalcolo della velocita' RA, come fa PHD2 in quel caso. Nei testi si mostra "?".
+  // Unknown Dec (PHD2 desktop without the mount position, for example guiding via ST4): the calibration Dec
+  // is assumed, i.e. no RA rate rescaling, as PHD2 does in that case. Texts show "?".
   if (p.dec == null) { p.decUnknown = true; p.dec = ref.calDec ?? p.calDec ?? 0; }
   const valid = s.frames.filter(okFrame);
   const base = { idx, start: s.start, end: s.end, p, nValid: valid.length, calRef: ref };
   if (valid.length < 60 || !p.scale || p.xRate == null) return { ...base, skipped: true, short: valid.length < 60 && !!p.scale && p.xRate != null };
   const scale = p.scale, E = (p.exposure || 2000) / 1000;
   const calDec = ref.calDec ?? p.calDec ?? p.dec;
-  // senza Dec non si puo' ricalcolare nulla: vale la velocita' scritta nel log (e nessun avviso "non ricalcolata")
+  // without Dec nothing can be rescaled: the rate written in the log applies (and no "not rescaled" warning)
   const rateRaTrue = p.decUnknown ? p.xRate : (ref.calXRate ?? p.xRate) * cosd(p.dec) / cosd(calDec);
   const rateDecTrue = ref.calYRate ?? p.yRate;
-  // velocita' di guida misurata in calibrazione, in multipli della siderale (RA riportata all'equatore)
+  // guide rate measured in calibration, in multiples of sidereal (RA referred to the equator)
   const guideRa = (rateRaTrue * scale) / (SIDEREAL * cosd(p.dec)), guideDec = (rateDecTrue * scale) / SIDEREAL;
   const steady = valid.filter((f) => !f.settling);
   const raS = steady.map((f) => f.ra * scale), decS = steady.map((f) => f.dec * scale);
   const tot = raS.map((x, i) => Math.hypot(x, decS[i]));
   const dts = []; for (let i = 1; i < valid.length; i++) dts.push(valid[i].t - valid[i - 1].t);
   const perf = {
-    // RMS come in PHD2 e ASIAIR: deviazione standard attorno alla media (uno spostamento costante non allunga le stelle)
+    // RMS as in PHD2 and ASIAIR: standard deviation around the mean (a constant offset doesn't elongate stars)
     raRms: std(raS), decRms: std(decS), totRms: Math.hypot(std(raS), std(decS)),
     raPeak: Math.max(...raS.map(Math.abs)), decPeak: Math.max(...decS.map(Math.abs)),
     over1: tot.filter((x) => x > 1).length / tot.length,
@@ -980,11 +980,11 @@ function analyzeSession(s, idx, ref) {
     raAtMax: steady.filter((f) => p.maxRA && f.raDur >= p.maxRA).length / steady.length,
     decAtMax: steady.filter((f) => p.maxDEC && f.decDur >= p.maxDEC).length / steady.length,
     decN: steady.filter((f) => f.decDir === "N").length, decS: steady.filter((f) => f.decDir === "S").length,
-    // durata totale delle correzioni DEC per direzione (ms): per il modo DEC conta quanto si corregge, non quante volte
+    // total duration of DEC corrections per direction (ms): for the DEC mode what matters is how much is corrected, not how many times
     decNms: steady.reduce((a, f) => a + (f.decDir === "N" ? f.decDur : 0), 0), decSms: steady.reduce((a, f) => a + (f.decDir === "S" ? f.decDur : 0), 0),
   };
-  // nessuna correzione inviata: "guiding disabled", oppure guida attiva ma impulsi a zero (log PHD2 per PC
-  // AstroBin 15/8/2024, S31-S32: errore RA fino a 106" e nessun impulso). Fuori da consigli, salti e confronti.
+  // no corrections sent: "guiding disabled", or guiding on but zero pulses (PHD2 desktop log
+  // AstroBin 15 Aug 2024, S31-S32: RA error up to 106" and no pulses). Left out of recommendations, jumps and comparisons.
   const noPulse = !!p.guideOff || (steady.length >= 30 && steady.filter((f) => f.raDur || f.decDur).length < 0.02 * steady.length);
   const jumps = !noPulse && steady.length >= 300 && steady[steady.length - 1].t - steady[0].t >= 600 ? findJumps(raS, decS, (steady[steady.length - 1].t - steady[0].t) / 3600, steady.map((f) => f.t)) : null;
   const series = { t: valid.map((f) => f.t), ra: valid.map((f) => f.ra * scale), dec: valid.map((f) => f.dec * scale), settling: valid.map((f) => f.settling) };
@@ -1057,8 +1057,8 @@ function analyzeSession(s, idx, ref) {
     for (const f of g) { sRa += (DIR[f.raDir] || 0) * f.raDur / 1000; sDec += (DIR[f.decDir] || 0) * f.decDur / 1000; }
   }
   const netDrift = tSteady > 0 ? { ra: (sRa * rateRaTrue * scale) / (tSteady / 60), dec: (sDec * rateDecTrue * scale) / (tSteady / 60) } : { ra: 0, dec: 0 };
-  // andamento dell'errore DEC nei tratti stabili ("/min): con la guida DEC in una sola direzione una deriva
-  // dalla parte opposta non viene corretta e l'errore si allontana dallo zero. Deriva vera = corretta + residua.
+  // trend of the DEC error in stable segments ("/min): with DEC guiding in one direction only, a drift
+  // the other way is not corrected and the error moves away from zero. True drift = corrected + residual.
   let trW = 0, trS = 0;
   for (const g of useSegs) {
     const d = g[g.length - 1].t - g[0].t; if (d <= 0) continue;
@@ -1067,7 +1067,7 @@ function analyzeSession(s, idx, ref) {
   const decTrend = trW ? (trS / trW) * scale * 60 : 0;
   netDrift.decTot = netDrift.dec + decTrend;
 
-  // sotto i 10 minuti il periodo trovato sarebbe solo rumore: non lo si cerca
+  // under 10 minutes the period found would just be noise: don't search for it
   const scanRes = span >= 600 ? peScan(RA.T, resRa) : null;
   const ownP = scanRes ? pickPeriod(scanRes.scan) : null;
   const pe = ownP ? peCurve(RA.T, scanRes.hp, p.dec, ownP, scanRes.upTo) : null;
@@ -1079,7 +1079,7 @@ function analyzeSession(s, idx, ref) {
     return { rms: std(segE.flat()) * scale, beh: behaviorOf(segE, segS) };
   };
   const runRa = (aggr, maxMs, assumed) => runRaFull(aggr, maxMs, assumed).rms;
-  // comportamento misurato nel log, sugli stessi tratti stabili
+  // behaviour measured in the log, on the same stable segments
   const dirSign = (f, axis) => (f[axis + "Dur"] ? DIR[f[axis + "Dir"]] || 0 : 0);
   const behavior = {
     ra: behaviorOf(useSegs.map((g) => g.map((f) => f.ra)), useSegs.map((g) => g.map((f) => dirSign(f, "ra")))),
@@ -1088,31 +1088,31 @@ function analyzeSession(s, idx, ref) {
   const runDec = (aggr, maxMs) => { const errs = []; for (const g of useSegs) errs.push(...replaySeg(segU(g, "dec"), makeResistSwitch(aggr, p.yMinMo), p.yRate, rateDecTrue, maxMs, E)); return std(errs) * scale; };
   const segMeasured = (axis) => std(useSegs.flat().map((f) => f[axis])) * scale;
   const maxRA = p.maxRA || 1000, maxDEC = p.maxDEC || 1000;
-  const actual = runRaFull(p.xAggr, maxRA, p.xRate); // impostazioni del log: RMS e comportamento in un solo passaggio
+  const actual = runRaFull(p.xAggr, maxRA, p.xRate); // log settings: RMS and behaviour in a single pass
   const sim = {
     measuredRa: segMeasured("ra"), measuredDec: segMeasured("dec"),
     actualRa: actual.rms, actualDec: p.yAggr != null ? runDec(p.yAggr, maxDEC) : null,
-    // comportamento previsto con le impostazioni del log (stessa velocita' usata da ASIAIR): deve somigliare al misurato
+    // behaviour predicted with the log settings (same rate used by ASIAIR): it should resemble the measured one
     actualBeh: actual.beh,
     fixedRa: runRa(p.xAggr, maxRA, rateRaTrue),
-    // [aggressivita', RMS, comportamento]
+    // [aggressiveness, RMS, behaviour]
     curveRa: AGGRS.map((a) => { const r = runRaFull(a, maxRA, rateRaTrue); return [a, r.rms, r.beh]; }),
     curveDec: p.yAggr != null ? AGGRS.map((a) => [a, runDec(a, maxDEC)]) : null,
   };
-  // con "guiding disabled" (PHD2 per PC) la stella si misura ma non partono correzioni: il moto serve per il
-  // periodo, ma le impostazioni del log non hanno guidato niente, quindi la fase non entra nei consigli
+  // with "guiding disabled" (PHD2 desktop) the star is measured but no corrections are sent: the motion is useful for the
+  // period, but the log settings didn't guide anything, so the phase is not used for the recommendations
   return { ...out, span, recon, netDrift, decTrend, pe, peScan: scanRes, sim, behavior, eligible: !noPulse && steady.length >= 300 && span >= 900 };
 }
 
-// Periodo della notte: l'errore periodico e' della montatura, quindi uguale in tutte le sessioni.
-// Si sommano i punteggi (normalizzati) delle sessioni, pesati con la loro durata; poi ogni sessione
-// abbastanza lunga (almeno 3 cicli) viene ripiegata su quel periodo.
+// Night period: the periodic error belongs to the mount, so it is the same in all sessions.
+// The (normalized) scores of the sessions are summed, weighted by their duration; then each session
+// long enough (at least 3 cycles) is folded on that period.
 function nightPeriod(results) {
   const grid = new Map();
   let upTo = 0, n = 0;
-  // Anche le fasi con salti restano: il punteggio sottrae quanto i cicli differiscono tra loro, quindi i salti
-  // (che non si ripetono) non spostano il periodo. Verificato il 7/11/2026: sul log AM5N del 14/3 la fase con
-  // salti di 154 min da' 286,5 s, la sola fase pulita (16 min) 279,5 s.
+  // Phases with jumps are kept too: the score subtracts how much the cycles differ from each other, so jumps
+  // (which don't repeat) don't shift the period. Checked on 7 Nov 2026: on the AM5N log of 14 Mar the phase with
+  // 154 min of jumps gives 286.5 s, the only clean phase (16 min) 279.5 s.
   for (const s of results) {
     if (s.skipped || !s.peScan) continue;
     const vmax = Math.max(...s.peScan.scan.map((x) => x[1]));
@@ -1127,19 +1127,19 @@ function nightPeriod(results) {
     if (s.skipped || !s.peScan || !s.pe) continue;
     const own = s.pe.period;
     if (s.peScan.upTo + 1e-9 >= P) { s.pe = peCurve(s.recon.T, s.peScan.hp, s.p.dec, P, s.peScan.upTo); s.pe.own = own; }
-    else s.pe.short = true; // sessione troppo corta per 3 cicli del periodo della notte
+    else s.pe.short = true; // session too short for 3 cycles of the night period
   }
   return { period: P, upTo, sessions: n };
 }
-// Il periodo e' affidabile se si e' potuto controllare anche il doppio (altrimenti potrebbe essere
-// la meta' di quello vero), oppure se coincide con quello dichiarato per la montatura.
+// The period is reliable if its double could also be checked (otherwise it might be
+// half the true one), or if it matches the one stated for the mount.
 function peReliable(pe, expected) {
   if (!pe) return false;
   if (expected && Math.abs(pe.period / expected - 1) < 0.03) return true;
   return pe.upTo + 1 >= Math.min(2 * pe.period, PE_MAX);
 }
-// Stato del periodo della notte rispetto alla montatura scelta:
-// rel = "match" (coincide col dichiarato), k = 2..4 (e' circa 1/k del dichiarato: armonica), "other"
+// State of the night period compared with the selected mount:
+// rel = "match" (matches the stated one), k = 2..4 (about 1/k of the stated one: harmonic), "other"
 function peStatus(A, setup) {
   const P = A.pe?.period;
   if (!P) return null;
@@ -1154,8 +1154,8 @@ function peStatus(A, setup) {
 }
 
 function simExposure(list, { k = 1, dec = null, T, aggr }) {
-  // generatore pseudocasuale a 32 bit (mulberry32), sempre lo stesso seme: risultati ripetibili.
-  // (Il vecchio seed*1103515245 superava la precisione dei numeri JavaScript e si ripeteva dopo ~16.000 valori.)
+  // 32-bit pseudorandom generator (mulberry32), always the same seed: repeatable results.
+  // (The old seed*1103515245 exceeded JavaScript number precision and repeated after ~16,000 values.)
   let seed = 12345;
   const rnd = () => {
     seed = (seed + 0x6d2b79f5) | 0;
@@ -1170,8 +1170,8 @@ function simExposure(list, { k = 1, dec = null, T, aggr }) {
     const decT = dec ?? p.dec;
     const rate = s.rateRaTrue * cosd(decT) / cosd(p.dec);
     const tt = []; for (let x = R.T[0]; x <= R.T[R.T.length - 1]; x += T) tt.push(x);
-    // il foglio PE descrive solo l'errore periodico: il fattore k si applica al moto lento senza la deriva
-    // lineare (raDrift, ″/min), che resta quella del log; il coseno della declinazione vale per entrambi
+    // the PE sheet describes only the periodic error: factor k is applied to the slow motion without the
+    // linear drift (raDrift, ″/min), which stays as in the log; the declination cosine applies to both
     const cosR = cosd(decT) / cosd(p.dec);
     const slow = interp(R.T, R.slowArc, tt).map((v, i) => { const d = (R.raDrift / 60) * (tt[i] - R.T[0]); return (((v - d) * k + d) * cosR) / scale; });
     const sig = (R.sigmaRa * Math.sqrt(s.E / T)) / scale;
@@ -1192,18 +1192,18 @@ function analyzeText(text) {
   const refOf = (cal) => (cal ? { calXRate: cal.results.find((r) => r.axis === "West")?.rate, calYRate: cal.results.find((r) => r.axis === "North")?.rate, calDec: cal.dec, cal } : {});
   const complete = (c) => c.results.length === 2;
   const calOk = calibrations.filter(complete);
-  // riferimento generale (se una sessione non ne ha uno suo): l'ultima calibrazione completa
+  // general reference (if a session has none of its own): the last complete calibration
   const ref = refOf(calOk[calOk.length - 1]);
-  // Quale calibrazione usa ogni sessione. Nell'intestazione della sessione ASIAIR riporta la velocita' DEC
-  // della calibrazione in uso cosi' com'e' (quella RA a volte e' ricalcolata per la declinazione, a volte no):
-  // la sessione usa la calibrazione con la stessa velocita' DEC, di preferenza l'ultima fatta prima di lei.
-  // Cosi' se a meta' notte si cambia velocita' e si ricalibra, le sessioni prima e dopo restano distinte,
-  // anche quelle partite con la calibrazione di un'altra sera (che nel log non c'e').
+  // Which calibration each session uses. In the session header ASIAIR reports the DEC rate
+  // of the calibration in use as it is (the RA one is sometimes rescaled for declination, sometimes not):
+  // the session uses the calibration with the same DEC rate, preferably the last one done before it.
+  // So if the rate is changed mid-night and you recalibrate, the sessions before and after stay separate,
+  // including those started with another night's calibration (which isn't in the log).
   const same = (a, b) => a != null && b != null && Math.abs(a - b) <= 0.0015 + 0.002 * Math.abs(b);
   const yOf = (c) => c.results.find((r) => r.axis === "North")?.rate;
-  // calibrazione che non e' nel log: velocita' RA di calibrazione ricavata dalle intestazioni. Ogni sessione
-  // riporta o quella di calibrazione o quella ricalcolata per la sua declinazione: vale il valore compatibile
-  // con piu' sessioni della stessa calibrazione; a parita' si assume che ASIAIR l'abbia ricalcolata.
+  // calibration not in the log: RA calibration rate derived from the headers. Each session
+  // reports either the calibration rate or the one rescaled for its declination: the value consistent
+  // with most sessions of the same calibration wins; on a tie ASIAIR is assumed to have rescaled it.
   const headerRef = (s) => {
     const cdOf = (o) => o.p.calDec ?? o.p.dec ?? 0;
     const cd = cdOf(s);
@@ -1217,7 +1217,7 @@ function analyzeText(text) {
   const results = sessions.map((s, i) => {
     const before = calibrations.slice(0, s.calN).filter(complete);
     let r;
-    if (s.p.yRate == null) r = before.length ? refOf(before[before.length - 1]) : ref; // log senza velocita' nell'intestazione
+    if (s.p.yRate == null) r = before.length ? refOf(before[before.length - 1]) : ref; // log without rates in the header
     else {
       const cal = before.filter((c) => same(yOf(c), s.p.yRate)).pop() || calOk.filter((c) => same(yOf(c), s.p.yRate)).pop();
       r = cal ? refOf(cal) : s.p.xRate != null ? headerRef(s) : ref;
@@ -1229,7 +1229,7 @@ function analyzeText(text) {
 }
 
 // ============================================================ recommendations
-// media pesata sulle sessioni: [aggressivita', RMS, comportamento (se c'e')]
+// weighted mean over the sessions: [aggressiveness, RMS, behaviour (if present)]
 function weightedCurve(list, key) {
   const w = list.map((s) => s.steadyN), W = w.reduce((a, b) => a + b, 0);
   return AGGRS.map((a, j) => {
@@ -1241,9 +1241,9 @@ function weightedCurve(list, key) {
     return row;
   });
 }
-// Aggressivita': la zona e' quella con RMS entro il 2% del minimo; dentro la zona si sceglie il valore
-// piu' basso (meglio che la correzione arrivi un po' corta) escludendo quelli che farebbero rimbalzare
-// la linea troppo spesso (FLIP_MAX), anche se l'RMS fosse di poco migliore.
+// Aggressiveness: the zone is the one with RMS within 2% of the minimum; inside the zone the
+// lowest value is chosen (better for the correction to fall a little short), excluding those that would make
+// the line bounce too often (FLIP_MAX), even if the RMS were slightly better.
 function pickAggr(curve, current) {
   const best = Math.min(...curve.map((c) => c[1]));
   const zone = curve.filter((c) => c[1] <= best * 1.02);
@@ -1253,10 +1253,10 @@ function pickAggr(curve, current) {
   const curPt = curve.reduce((m, c) => (Math.abs(c[0] - current) < Math.abs(m[0] - current) ? c : m));
   const inZone = current >= lo - 1e-9 && current <= hi + 1e-9;
   const gain = curPt[1] - rec[1];
-  // allBounce: nessun valore della zona resta sotto FLIP_MAX; si propone il piu' basso (quello che rimbalza meno) e lo si dice
+  // allBounce: no value in the zone stays below FLIP_MAX; the lowest one (which bounces least) is proposed and the page says so
   return { best, lo, hi, rec: rec[0], recRms: rec[1], curRms: curPt[1], inZone, gain, keep: (inZone || gain < 0.01) && calm(curPt), recBeh: rec[2] || null, curBeh: curPt[2] || null, allBounce: !zone.some(calm) };
 }
-// frase sul grafico per la riga dell'aggressivita' RA (valori previsti dalla simulazione)
+// sentence about the graph for the RA aggressiveness row (values predicted by the simulation)
 function behaviorNote(ra) {
   const c = ra.curBeh, r = ra.recBeh;
   if (!c || c.runs == null) return "";
@@ -1265,14 +1265,14 @@ function behaviorNote(ra) {
   return T(` Nel grafico le correzioni in serie nella stessa direzione passerebbero ${artPc(c.runs, "dal")} ${artPc(r.runs, "al")} e i rimbalzi ${artPc(c.flips, "dal")} ${artPc(r.flips, "al")}${r.flips <= FLIP_MAX ? ": restano rari" : ""}.`,
     ` On the graph, corrections in a row in the same direction would go from ${pf(c.runs)} to ${pf(r.runs)} and rebounds from ${pf(c.flips)} to ${pf(r.flips)}${r.flips <= FLIP_MAX ? ": still rare" : ""}.`);
 }
-// scatti di velocita' di guida offerti da ASIAIR
+// guide rate steps offered by ASIAIR
 const GUIDE_STEPS = [0.25, 0.5, 0.75, 0.9];
 const nearestStep = (g) => GUIDE_STEPS.reduce((b, x) => (Math.abs(x - g) < Math.abs(b - g) ? x : b));
 const ceil100 = (x) => Math.ceil(x / 100) * 100;
 const round50 = (x) => Math.round(x / 50) * 50;
 
-// light letto (FITS) della stessa notte del log? DATE-OBS e' in UTC, gli orari del log sono locali:
-// margine di qualche ora
+// light frame (FITS) from the same night as the log? DATE-OBS is in UTC, log times are local:
+// a margin of a few hours
 function fitsSameNight(A, fits) {
   if (!fits || !fits.date || !A.results.length) return null;
   const tl = Date.parse(fits.date.replace(/Z?$/, "Z"));
@@ -1290,9 +1290,9 @@ function filterNote(A, setup) {
   return "";
 }
 
-// Confronto tra velocita' di guida provate nella stessa notte (ogni sessione con la sua calibrazione).
-// Il seeing cambia da una sessione all'altra: per questo si confronta l'RMS diviso per il "rumore del
-// seeing" della sessione (la parte veloce del moto RA ricostruito, che non dipende da come si guida).
+// Comparison between guide rates tried in the same night (each session with its own calibration).
+// Seeing changes from one session to the next: that's why the RMS is compared divided by the session's "seeing
+// noise" (the fast part of the reconstructed RA motion, which doesn't depend on how you guide).
 function rateComparison(A) {
   const ss = A.results.filter((s) => !s.skipped && s.recon && s.steadyN >= 300 && !jumpy(s) && !s.noPulse);
   const by = new Map();
@@ -1320,14 +1320,14 @@ function rateComparison(A) {
 function recommend(A, setup) {
   const eligible0 = A.results.filter((r) => !r.skipped && r.eligible);
   if (!eligible0.length) return null;
-  // le sessioni con salti improvvisi falserebbero i consigli (impulsi lunghi, RMS alto): si escludono
-  // se ne resta almeno una pulita; altrimenti si tengono e la pagina avvisa che i consigli sono poco affidabili
+  // sessions with sudden jumps would skew the recommendations (long pulses, high RMS): they are excluded
+  // if at least one clean session remains; otherwise they are kept and the page warns that the advice is unreliable
   const withJumps = eligible0.filter(jumpy);
   const eligible = withJumps.length < eligible0.length ? eligible0.filter((s) => !jumpy(s)) : eligible0;
   const jumpExcluded = eligible.length < eligible0.length ? withJumps : [];
   const allJumpy = withJumps.length > 0 && withJumps.length === eligible0.length;
   const last = eligible[eligible.length - 1], p = last.p;
-  // se nella notte si sono provate piu' velocita' di guida, i consigli valgono per quella attuale (l'ultima)
+  // if several guide rates were tried in the night, the recommendations apply to the current one (the last)
   const list = eligible.filter((s) => nearestStep(s.guideRa) === nearestStep(last.guideRa));
   const W = list.reduce((a, s) => a + s.steadyN, 0);
   const decMean = list.reduce((a, s) => a + s.p.dec * s.steadyN, 0) / W;
@@ -1357,8 +1357,8 @@ function recommend(A, setup) {
         `Optimal range ${pc(dec.lo)}–${pc(dec.hi)}. ${dec.keep ? (dec.inZone ? "The current value is already in the range" : `Possible gain ${fa(dec.gain)}: negligible`) : `From ${fa(dec.curRms)} to ${fa(dec.recRms)} DEC RMS`}.`) });
   }
 
-  // calibrazione delle sessioni su cui si basano i consigli (non per forza l'ultima del log:
-  // dopo l'ultima sessione lunga si puo' essere ricalibrato a un'altra velocita')
+  // calibration of the sessions the recommendations are based on (not necessarily the last one in the log:
+  // after the last long session you may have recalibrated at another rate)
   const cr = last.calRef || {};
   // max duration
   const guideRateEq = (cr.calXRate ?? p.xRate) * p.scale / cosd(cr.calDec ?? p.calDec ?? p.dec); // "/s equatorial
@@ -1367,7 +1367,7 @@ function recommend(A, setup) {
   const recMax = Math.min(2500, Math.max(500, ceil100(3 * needMs), ceil100(1.5 * Math.max(...list.map((s) => Math.max(s.perf.raP99, s.perf.decP99))))));
   const atMax = Math.max(...list.map((s) => Math.max(s.perf.raAtMax, s.perf.decAtMax)));
   const curMax = Math.min(p.maxRA || 0, p.maxDEC || 0);
-  // asse per asse: un valore gia' adeguato (es. DEC 2000 ms con RA 400 ms) non va abbassato
+  // axis by axis: a value that is already adequate (e.g. DEC 2000 ms with RA 400 ms) must not be lowered
   const axisAt = (k) => Math.max(...list.map((s) => s.perf[k]));
   const axisRec = (cur, at) => (cur >= recMax && cur <= 2500 && at < 0.01 ? cur : recMax);
   const recRA = axisRec(p.maxRA || 0, axisAt("raAtMax")), recDEC = axisRec(p.maxDEC || 0, axisAt("decAtMax"));
@@ -1380,8 +1380,8 @@ function recommend(A, setup) {
 
   // exposure table
   const aggrRA = ra.keep ? p.xAggr : ra.rec;
-  // pose confrontate: quelle tipiche piu' quella del log, se e' diversa (es. 2,5 s o 5 s), cosi' la si
-  // confronta davvero invece di consigliare sempre di cambiarla
+  // exposures compared: the typical ones plus the one in the log, if different (e.g. 2.5 s or 5 s), so that it
+  // is really compared instead of always recommending a change
   const curE0 = (p.exposure || 2000) / 1000;
   const Ts = [...new Set([1, 1.5, 2, 3, 4, curE0])].sort((a, b) => a - b);
   const scen = [{ name: T(`Come nel log (Dec ${fn(decMean, 0)}°)`, `As in the log (Dec ${fn(decMean, 0)}°)`), k: 1, dec: null }, { name: T("Stesso moto della montatura, oggetto a Dec 0°", "Same mount motion, target at Dec 0°"), k: 1, dec: 0 }];
@@ -1391,20 +1391,20 @@ function recommend(A, setup) {
   }
   const expo = scen.map((sc) => ({ ...sc, vals: Ts.map((T) => simExposure(list, { k: sc.k, dec: sc.dec, T, aggr: aggrRA })) }));
   const curE = (p.exposure || 2000) / 1000;
-  // SNR della stella guida: stimato da quello del log, cresce circa con la radice della posa.
-  // Le pose che lo porterebbero sotto SNR_MIN sono escluse (con filtri a banda stretta succede presto).
+  // SNR of the guide star: estimated from the one in the log, grows roughly with the square root of the exposure.
+  // Exposures that would take it below SNR_MIN are excluded (with narrowband filters this happens quickly).
   const SNR_MIN = 15;
-  // SNR di ogni fase riportato alla posa attuale (le fasi possono avere pose diverse), poi il peggiore
+  // SNR of each phase scaled to the current exposure (phases can have different exposures), then the worst one
   const snrLog = Math.min(...list.map((s) => s.perf.snrMed * Math.sqrt(curE / ((s.p.exposure || 2000) / 1000))));
   const snrAt = (T) => snrLog * Math.sqrt(T / curE);
   const okT = Ts.map((T) => snrAt(T) >= SNR_MIN);
   const masked = (vals) => vals.map((v, i) => (okT[i] ? v : Infinity));
-  // a parita' (entro il 10%) preferisci la posa piu' lunga: insegue meno il seeing reale
+  // on a tie (within 10%) prefer the longer exposure: it chases the real seeing less
   const pick = (vals) => { const m = masked(vals), b = Math.min(...m); if (!isFinite(b)) return Ts[Ts.length - 1]; let j = 0; m.forEach((v, i) => { if (v <= b * 1.1) j = i; }); return Ts[j]; };
   const row0 = expo[0].vals, best0 = Math.min(...masked(row0)), iCur = Ts.indexOf(curE);
   const curSnrOk = snrAt(curE) >= SNR_MIN;
   const bestT0 = pick(row0), bestTlow = pick(expo[1].vals);
-  // si tiene la posa attuale se e' entro il 5% della migliore o se e' proprio quella che si consiglierebbe
+  // the current exposure is kept if it is within 5% of the best or if it is exactly the one that would be recommended
   const expKeep = iCur >= 0 && curSnrOk && (row0[iCur] <= best0 * 1.05 || bestT0 === curE);
   const minT = Ts.find((T, i) => okT[i]);
   const tMax = Ts[Ts.length - 1];
@@ -1428,14 +1428,14 @@ function recommend(A, setup) {
       " Valid for the same filter as the log: with a dual-band or narrowband filter the guide sensor gets less light, so analyze a log taken with that filter. In poor seeing, exposures of 2 s or more usually chase the seeing less.") });
 
   // DEC mode
-  // quota della durata totale delle correzioni DEC (cento impulsi brevi da una parte non pesano piu' di dieci lunghi dall'altra)
+  // share of the total duration of DEC corrections (a hundred short pulses on one side don't weigh more than ten long ones on the other)
   const shares = list.map((s) => { const n = s.perf.decNms, so = s.perf.decSms; const tot = n + so; return tot ? { dir: n >= so ? "North" : "South", share: Math.max(n, so) / tot } : null; }).filter(Boolean);
   const oneDir = shares.length && shares.every((x) => x.dir === shares[0].dir && x.share >= 0.85);
   const sharesTxt = shares.map((x) => `${x.dir === "North" ? "N" : "S"} ${pf(x.share)}`).join(", ");
   const itDir = (d) => (d === "North" ? "Nord" : "Sud");
   if (p.decMode === "North" || p.decMode === "South") {
-    // Guida DEC gia' in una sola direzione: le correzioni vanno per forza tutte da quella parte, quindi
-    // conta l'errore DEC. Se si allontana dallo zero, la deriva va dall'altra parte e nessuno la corregge.
+    // DEC guiding already in one direction only: corrections necessarily all go that way, so
+    // the DEC error is what counts. If it moves away from zero, the drift goes the other way and nobody corrects it.
     const trend = list.reduce((a, s) => a + (s.decTrend || 0) * s.steadyN, 0) / W;
     const need = Math.abs(trend) > 0.1 ? (trend > 0 ? "South" : "North") : null;
     const wrong = need && need !== p.decMode;
@@ -1477,7 +1477,7 @@ function recommend(A, setup) {
           `RA rate correctly adjusted for declination in all guiding runs. Steps used: ${cal ? `${cal.steps.West} RA, ${cal.steps.North} DEC` : "–"}.`) });
 
   // polar alignment
-  // deriva DEC vera: quella corretta dalla guida piu' quella rimasta nell'errore (guida in una sola direzione)
+  // true DEC drift: the part corrected by guiding plus the part left in the error (one-direction guiding)
   const decDrift = Math.max(...list.map((s) => Math.abs(s.netDrift.decTot ?? s.netDrift.dec)));
   const paMin = 3.81 * decDrift;
   rows.push({ param: T("Stazionamento polare", "Polar alignment"), cur: T(`deriva DEC ${fa(decDrift)}/min`, `DEC drift ${fa(decDrift)}/min`), rec: paMin > 3 ? T("rifallo con più cura", "redo it more carefully") : T("va bene", "fine"), status: paMin > 5 ? "warn" : paMin > 3 ? "change" : "ok",
@@ -1485,7 +1485,7 @@ function recommend(A, setup) {
     why: T(`Una deriva DEC di ${fa(decDrift)}/min corrisponde a un errore di stazionamento di almeno ${fn(paMin, 1)}′, se viene tutta dallo stazionamento (flessioni e rifrazione possono aggiungerne un po'). ${paMin > 3 ? "Sotto i 2–3′ la DEC lavora meno e la guida è più tranquilla." : "Errore piccolo, nessuna azione necessaria."}`,
       `A DEC drift of ${fa(decDrift)}/min means a polar alignment error of at least ${fn(paMin, 1)}′, if all of it comes from polar alignment (flexure and refraction can add a little). ${paMin > 3 ? "Below 2–3′ DEC works less and guiding is calmer." : "Small error, no action needed."}`) });
 
-  // guide rate: scatto probabile (quello di ASIAIR piu' vicino alla velocita' misurata) e se ha margine
+  // guide rate: likely step (the ASIAIR step closest to the measured rate) and whether it has margin
   {
     const gRa = last.guideRa, gDec = last.guideDec, nominal = nearestStep(gRa);
     const next = GUIDE_STEPS.find((x) => x > nominal + 1e-9) || null;
@@ -1524,12 +1524,12 @@ const nf = (d) => new Intl.NumberFormat(LANG === "en" ? "en-US" : "it-IT", { min
 const fn = (x, d = 2) => (x == null || !isFinite(x) ? "–" : nf(d).format(x));
 const fa = (x, d = 2) => (x == null || !isFinite(x) ? "–" : `${nf(d).format(x)}″`);
 const pc = (x) => (x == null ? "–" : `${Math.round(x * 100)}%`);
-// "al 70%" ma "all'85%" (8, 11, 18, 80–89 iniziano per vocale)
+// Italian: "al 70%" but "all'85%" (8, 11, 18, 80–89 start with a vowel sound)
 const artPc = (x, art) => { const n = String(Math.round(x * 100)); return (/^8/.test(n) || n === "11" || n === "18" ? art + "l'" : art + " ") + n + "%"; };
 const alPc = (x) => artPc(x, "al");
 const pf = (x, d = 0) => (x == null || !isFinite(x) ? "–" : `${nf(d).format(x * 100)}%`);
 const hhmm = (s) => (s || "").slice(11, 16);
-// declinazione da mostrare: "?" se il log non la riporta (nei calcoli vale quella della calibrazione)
+// declination to display: "?" if the log doesn't report it (calculations use the calibration one)
 const decTxt = (p, d = 1) => (p.decUnknown ? "?" : fn(p.dec, d));
 const el = (tag, attrs = {}, ...kids) => {
   const n = document.createElement(tag);
@@ -1628,8 +1628,8 @@ function saveSetup() {
 try { const saved = JSON.parse(localStorage.getItem("guida-setup") || "null"); if (saved) for (const id of setupIds) if (saved[id] != null) document.getElementById(id).value = saved[id]; } catch (e) {}
 for (const id of setupIds) document.getElementById(id).addEventListener("change", () => { saveSetup(); if (state.A) renderAll(); });
 
-// ---- intestazione FITS di un light (si leggono solo i primi blocchi, anche se il file e' da 50 MB).
-// Le coordinate del luogo (SITELAT/SITELONG e simili, vedi sotto) non vengono lette ne' salvate.
+// ---- FITS header of a light frame (only the first blocks are read, even if the file is 50 MB).
+// Site coordinates (SITELAT/SITELONG and similar, see below) are never read or saved.
 async function readFitsHeader(file) {
   const buf = new Uint8Array(await file.slice(0, 2880 * 20).arrayBuffer());
   let txt = ""; for (let i = 0; i < buf.length; i++) txt += String.fromCharCode(buf[i]);
@@ -1638,8 +1638,8 @@ async function readFitsHeader(file) {
   for (let i = 0; i + 80 <= txt.length; i += 80) {
     const card = txt.slice(i, i + 80), key = card.slice(0, 8).trim();
     if (key === "END") break;
-    // posizione del luogo: SITE* (ASIAIR, N.I.N.A.), OBSGEO-* (standard FITS), LAT-OBS/LONG-OBS/ALT-OBS,
-    // LATITUDE/LONGITUD, ELEVATIO: saltate senza leggerne il valore
+    // site position: SITE* (ASIAIR, N.I.N.A.), OBSGEO-* (FITS standard), LAT-OBS/LONG-OBS/ALT-OBS,
+    // LATITUDE/LONGITUD, ELEVATIO: skipped without reading their value
     if (card.slice(8, 10) !== "= " || /^(SITE|OBSGEO|LAT|LONG|ALT-OBS|ELEV)/.test(key)) continue;
     const v = card.slice(10).trim();
     if (v.startsWith("'")) { const m = v.match(/^'((?:[^']|'')*)'/); h[key] = m ? m[1].replace(/''/g, "'").trim() : ""; }
@@ -1651,7 +1651,7 @@ function fitsSummary(h, name) {
   const num = (k) => (typeof h[k] === "number" && isFinite(h[k]) ? h[k] : null);
   const str = (k) => (typeof h[k] === "string" && h[k] ? h[k] : null);
   const px = num("XPIXSZ");
-  // scala misurata dalla risoluzione astrometrica (matrice CD), se ASIAIR l'ha salvata
+  // scale measured from the plate-solving resolution (CD matrix), if ASIAIR saved it
   const cd = ["CD1_1", "CD1_2", "CD2_1", "CD2_2"].map(num);
   let scale = null;
   if (cd.every((x) => x != null)) scale = Math.sqrt(Math.abs(cd[0] * cd[3] - cd[1] * cd[2])) * 3600;
@@ -1664,7 +1664,7 @@ function fitsSummary(h, name) {
   return { name, camera: str("INSTRUME"), px, flDecl, scale, flEff, filter: str("FILTER"), telescop: tel, mount: m ? m.name : null,
     exptime: num("EXPTIME") ?? num("EXPOSURE"), date: date && /^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(date) ? date : null };
 }
-let fitsMsg = null; // messaggio sotto i campi, tenuto come funzione per la traduzione
+let fitsMsg = null; // message under the fields, kept as a function for translation
 function showFitsInfo() {
   const box = document.getElementById("fitsInfo");
   const f = state.fits;
@@ -1702,7 +1702,7 @@ async function openFits(file, handle) {
   }
 }
 try { const f = JSON.parse(localStorage.getItem("guida-fits") || "null"); if (f && f.name) state.fits = f; } catch (e) {}
-// stessa notte del log? (DATE-OBS e' in UTC, gli orari del log sono locali: margine di qualche ora)
+// same night as the log? (DATE-OBS is in UTC, log times are local: a margin of a few hours)
 
 function tile(label, value, unit, sub, meter) {
   const v = el("div", { class: "value" }, value); if (unit) v.append(el("small", { text: unit }));
@@ -1719,19 +1719,19 @@ function renderAll() {
   const A = state.A, setup = readSetup();
   out.replaceChildren();
   const okSessions = A.results.filter((r) => !r.skipped);
-  // la pagina si aggiorna da sola solo con la cartella collegata e la spunta attiva
+  // the page refreshes by itself only with the folder connected and the box ticked
   const autoOn = autoTimer != null && dirHandle != null;
   const waitTail = autoOn ? T(" La pagina si aggiorna da sola ogni 2 minuti.", " The page refreshes by itself every 2 minutes.")
     : T(" Riapri il log più tardi, oppure collega la cartella e attiva l'aggiornamento automatico.", " Open the log again later, or connect the folder and turn on automatic refresh.");
   const lastRes = A.results[A.results.length - 1];
   if (!okSessions.length && lastRes && lastRes.short) {
-    // guida appena partita: la sessione c'e' ma ha meno di 2 minuti di frame validi
+    // guiding just started: the session exists but has less than 2 minutes of valid frames
     out.append(el("p", { class: "msg info", text: T(`La guida è iniziata da poco (${lastRes.nValid} frame finora). Grafici e analisi compaiono dopo 2 minuti di guida, i consigli dopo circa 15 minuti.`,
       `Guiding started only recently (${lastRes.nValid} frames so far). Charts and analysis appear after 2 minutes of guiding, the advice after about 15 minutes.`) + waitTail }));
     return;
   }
   if (!A.results.length && A.calibrations.length) {
-    // nel log c'e' solo la calibrazione: la guida non e' ancora partita
+    // the log only contains the calibration: guiding hasn't started yet
     out.append(el("p", { class: "msg info", text: T("Nel log c'è la calibrazione ma la guida non è ancora partita. Grafici e analisi compaiono dopo 2 minuti di guida, i consigli dopo circa 15 minuti.",
       "The log has the calibration but guiding hasn't started yet. Charts and analysis appear after 2 minutes of guiding, the advice after about 15 minutes.") + waitTail }));
     return;
@@ -1752,7 +1752,7 @@ function renderAll() {
   const dith = list.reduce((a, s) => a + s.dithers, 0);
   const settle = median(list.flatMap((s) => s.dithers ? [s.settleMed] : []).filter(isFinite));
 
-  // su tutte le fasi analizzate: quelle senza correzioni non sono tra quelle usate per i consigli
+  // over all analyzed phases: those without corrections are not among those used for the recommendations
   const AW = algoAlert(okSessions);
   if (AW) out.append(AW);
   if (VIEW === "simple") { out.append(renderSimple(A, R, list, totRms, imgScale)); return; }
@@ -1792,7 +1792,7 @@ function renderAll() {
 
   // ---- recommendations
   if (!R) {
-    // nessuna sessione abbastanza lunga: spiega quanto manca invece di non mostrare nulla
+    // no session long enough: explain how much is missing instead of showing nothing
     const longest = Math.max(...okSessions.map((s) => s.duration / 60));
     out.append(el("section", {}, el("div", { class: "sechead" }, el("h2", { text: T("Impostazioni consigliate per ASIAIR", "Recommended ASIAIR settings") })),
       el("p", { class: "msg info", text: T(`I consigli compaiono quando una fase di guida ha almeno 15 minuti di guida stabile. La più lunga finora: ${fn(longest, 0)} min.`,
@@ -1822,7 +1822,7 @@ function renderAll() {
     out.append(sec);
   }
 
-  // ---- confronto tra velocita' di guida (solo se nella notte ce n'e' piu' di una)
+  // ---- guide rate comparison (only if more than one was used in the night)
   const RC = rateComparison(A);
   if (RC) {
     const sec = el("section", {}, el("div", { class: "sechead" }, el("h2", { text: T("Confronto tra velocità di guida", "Guide rate comparison") }),
@@ -1858,7 +1858,7 @@ function renderAll() {
     out.append(sec);
   }
 
-  // ---- calibration (quella delle sessioni usate per i consigli; senza consigli l'ultima del log)
+  // ---- calibration (that of the sessions used for the recommendations; without recommendations the last one in the log)
   const cal = R ? R.cal : A.ref.cal;
   if (cal) {
     const sec = el("section", {}, el("div", { class: "sechead" }, el("h2", { text: T("Calibrazione", "Calibration") }), el("p", { text: T(`${A.calibrations.length} tentativi, usata quella delle ${hhmm(cal.start)}`, `${A.calibrations.length} attempts, using the one at ${hhmm(cal.start)}`) })));
@@ -1872,7 +1872,7 @@ function renderAll() {
     t.append(tile(T("Passo usato", "Step used"), String(cal.step), "ms", cal.steps.West >= 8 && cal.steps.West <= 25 ? T("Numero di passi adeguato", "Adequate number of steps") : T("Troppi o troppo pochi passi", "Too many or too few steps")));
     sec.append(t);
 
-    // passo di calibrazione per declinazione (~25 px in 12 passi RA)
+    // calibration step for the declination (~25 px in 12 RA steps)
     const rate0 = w.rate / cosd(cal.dec);
     const calDecAbs = Math.round(Math.abs(cal.dec) * 10) / 10;
     const targetDecs = [...new Set((state.R ? state.R.list : []).map((s) => Math.round(Math.abs(s.p.dec) * 10) / 10))];
@@ -1932,8 +1932,8 @@ function renderAll() {
   out.append(el("section", {}, el("div", { class: "sechead" }, el("h2", { text: T("Tutte le fasi di guida", "All guiding runs") })), tw));
 }
 
-// Avvisi dei primi minuti (vista Semplice, prima dei consigli completi): solo cose che si misurano bene
-// anche con pochi minuti di guida e che conviene sistemare subito.
+// Early warnings (Simple view, before the full recommendations): only things that can be measured well
+// even with a few minutes of guiding and that are worth fixing right away.
 function earlyWarnings(S) {
   const out = [];
   if (!S || S.skipped) return out;
@@ -1945,11 +1945,11 @@ function earlyWarnings(S) {
         `The measured RA rate doesn't match the calibration: ASIAIR probably restarted without recomputing it for the target's declination (${fn(p.dec, 0)}°). ${nearPole ? "The target is close to the pole: recalibrate between 20° and 40° declination near the meridian, then go back to the target." : "Recalibrate directly on the target."}`) });
   }
   const atMax = Math.max(S.perf.raAtMax, S.perf.decAtMax);
-  // solo l'asse che tocca il limite (RA 400 ms al massimo non deve far salire una DEC gia' a 2000 ms)
+  // only the axis that hits the limit (RA at a 400 ms maximum must not raise a DEC already at 2000 ms)
   const axisNew = (cur, at) => (at > 0.01 ? Math.max(cur, Math.min(2500, ceil100(1.5 * (cur || 1000)))) : cur);
   const newRA = axisNew(p.maxRA || 0, S.perf.raAtMax), newDEC = axisNew(p.maxDEC || 0, S.perf.decAtMax);
   const curMax = Math.max(S.perf.raAtMax > 0.01 ? p.maxRA || 0 : 0, S.perf.decAtMax > 0.01 ? p.maxDEC || 0 : 0);
-  // con i salti gli impulsi lunghi vengono dalla meccanica: lo spiega l'avviso sui salti, non si cambia la durata
+  // with jumps the long pulses come from the mechanics: the jumps warning explains it, the duration is not changed
   if (atMax > 0.01 && !jumpy(S)) {
     const raised = newRA > (p.maxRA || 0) || newDEC > (p.maxDEC || 0);
     out.push({ param: T("Durata massima RA/DEC", "Max RA/DEC duration"), set: raised ? `${p.maxRA} / ${p.maxDEC} ms → ${newRA} / ${newDEC} ms` : `${p.maxRA} / ${p.maxDEC} ms`,
@@ -1959,7 +1959,7 @@ function earlyWarnings(S) {
   }
   if (S.perf.snrMed < 15) out.push({ param: T("Stella guida", "Guide star"), set: `SNR ${fn(S.perf.snrMed, 0)}`,
     why: T("La stella guida è debole: scegli una stella più luminosa, allunga la posa di guida o alza il gain.", "The guide star is faint: pick a brighter star, lengthen the guide exposure or raise the gain.") });
-  // derive DEC: servono almeno 10 minuti di tratti stabili (con meno la stima va su e giu' e l'avviso lampeggia)
+  // DEC drifts: at least 10 minutes of stable segments are needed (with less the estimate goes up and down and the warning flickers)
   if (S.netDrift && S.span >= 600) {
     const drift = Math.abs(S.netDrift.decTot ?? S.netDrift.dec), paMin = 3.81 * drift;
     if (paMin > 5) out.push({ param: T("Stazionamento polare", "Polar alignment"), set: T(`errore di almeno ${fn(paMin, 0)}′`, `error of at least ${fn(paMin, 0)}′`),
@@ -1972,8 +1972,8 @@ function earlyWarnings(S) {
   return out;
 }
 
-// PHD2 per PC permette altri algoritmi (PPEC, Lowpass, Lowpass2, Z-filter...): la simulazione conosce solo
-// Hysteresis in RA e Resist Switch in DEC (quelli di ASIAIR), quindi con gli altri i consigli non valgono.
+// PHD2 desktop allows other algorithms (PPEC, Lowpass, Lowpass2, Z-filter...): the simulation only knows
+// Hysteresis in RA and Resist Switch in DEC (the ASIAIR ones), so with the others the recommendations don't apply.
 function algoWarning(list) {
   const bad = (have, want) => have && have !== want;
   const ra = [...new Set(list.filter((s) => bad(s.p.xAlgo, "Hysteresis")).map((s) => s.p.xAlgo))];
@@ -1982,14 +1982,14 @@ function algoWarning(list) {
   const parts = [], partsEn = [];
   if (ra.length) { parts.push(`RA: ${ra.join(", ")} (simulato: Hysteresis)`); partsEn.push(`RA: ${ra.join(", ")} (simulated: Hysteresis)`); }
   if (dec.length) { parts.push(`DEC: ${dec.join(", ")} (simulato: Resist Switch)`); partsEn.push(`DEC: ${dec.join(", ")} (simulated: Resist Switch)`); }
-  // vale solo per l'asse con l'algoritmo diverso: con la sola DEC diversa i consigli RA restano buoni
+  // applies only to the axis with the different algorithm: with only DEC different, the RA recommendations stay valid
   const noIt = ra.length && dec.length ? "aggressività, durata massima e posa di guida" : ra.length ? "aggressività RA, durata massima RA e posa di guida" : "aggressività e durata massima DEC";
   const noEn = ra.length && dec.length ? "aggressiveness, max duration and guide exposure" : ra.length ? "RA aggressiveness, max RA duration and guide exposure" : "DEC aggressiveness and max DEC duration";
   return { param: T("Algoritmo di guida non supportato", "Guide algorithm not supported"),
     why: T(`Nel log ci sono algoritmi diversi da quelli che la pagina sa simulare. ${parts.join("; ")}. Le misure (RMS, periodo, deriva, salti) valgono, ma i consigli su ${noIt} riguardano l'algoritmo simulato: non usarli per il tuo.`,
       `The log uses algorithms other than the ones this page can simulate. ${partsEn.join("; ")}. The measurements (RMS, period, drift, jumps) are valid, but the advice on ${noEn} applies to the simulated algorithm: don't use it for yours.`) };
 }
-// stella guida saturata in molti frame: il centro si misura peggio (PHD2 la usa lo stesso)
+// guide star saturated in many frames: its centre is measured less accurately (PHD2 uses it anyway)
 const SAT_WARN = 0.2;
 function saturationWarning(list) {
   const hit = list.filter((s) => s.perf.satFrac >= SAT_WARN);
@@ -1999,7 +1999,7 @@ function saturationWarning(list) {
     why: T(`In ${ss} la stella guida è saturata fino al ${pf(worst, 0)} dei frame. La guida la usa lo stesso, ma con il centro "piatto" la posizione si misura peggio e l'errore sembra più grande o più piccolo di quello vero. Scegli una stella meno luminosa, oppure abbassa il gain o accorcia la posa di guida.`,
       `In ${ss} the guide star is saturated in up to ${pf(worst, 0)} of frames. Guiding still uses it, but with a "flat top" the position is measured less well and the error looks larger or smaller than it really is. Pick a fainter star, or lower the gain or shorten the guide exposure.`) };
 }
-// fasi senza correzioni: con la guida "attiva" ma impulsi a zero e' un guasto da cercare, non un'impostazione
+// phases without corrections: with guiding "on" but zero pulses it's a fault to look for, not a setting
 function noPulseWarning(list) {
   const off = list.filter((s) => s.p.guideOff), dead = list.filter((s) => s.noPulse && !s.p.guideOff);
   if (!dead.length && !off.length) return null;
@@ -2020,14 +2020,14 @@ function algoAlert(list) {
   return ws.length ? el("section", {}, el("div", { class: "alerts" }, ...ws.map((w) => el("div", { class: "alert" }, chip("warn", statusText("warn")), el("span", {}, el("b", { text: w.param + ": " }), w.why))))) : null;
 }
 
-// nota sotto il titolo dei consigli: sessioni escluse per i salti, o consigli poco affidabili
+// note under the recommendations title: sessions excluded for jumps, or unreliable recommendations
 function jumpRecNote(R) {
   if (R.jumpExcluded.length) return T(` Escluse le fasi di guida con i salti (${R.jumpExcluded.map((s) => "S" + s.idx).join(", ")}).`, ` Guiding runs with jumps left out (${R.jumpExcluded.map((s) => "S" + s.idx).join(", ")}).`);
   if (R.allJumpy) return T(" Tutte le fasi di guida lunghe hanno i salti: questi valori sono poco affidabili finché non li risolvi.", " All long guiding runs have jumps: these values are unreliable until you fix them.");
   return "";
 }
 
-// Vista semplice: un giudizio in una frase e l'elenco di cosa cambiare in ASIAIR, niente grafici.
+// Simple view: a one-sentence verdict and the list of what to change in ASIAIR, no charts.
 function renderSimple(A, R, list, totRms, imgScale) {
   const sec = el("section", {});
   const thr = imgScale ? imgScale / 2 : null;
@@ -2037,7 +2037,7 @@ function renderSimple(A, R, list, totRms, imgScale) {
             : T(`La guida è da migliorare: errore medio ${fa(totRms)}, sopra la soglia di ${fa(thr)} per la tua configurazione.`, `Guiding needs work: average error ${fa(totRms)}, above the ${fa(thr)} threshold for your setup.`))
     : T(`Errore medio di guida ${fa(totRms)}. Inserisci in alto focale e pixel di ripresa per sapere se basta.`, `Average guiding error ${fa(totRms)}. Enter the imaging focal length and pixel size above to know whether it is enough.`))
     + (R && R.jumpExcluded.length ? T(" Senza contare le fasi di guida con i salti.", " Not counting the guiding runs with jumps.") : "") }));
-  // salti improvvisi: prima delle impostazioni, perche' nessuna impostazione li risolve
+  // sudden jumps: before the settings, because no setting fixes them
   const J = jumpSummary(A);
   if (J) {
     const jt = jumpText(J);
@@ -2045,7 +2045,7 @@ function renderSimple(A, R, list, totRms, imgScale) {
       el("p", { text: T("Un problema che le impostazioni di guida non possono risolvere.", "A problem the guiding settings can't fix.") })));
     sec.append(el("ol", { class: "todo" }, el("li", {}, el("b", { text: jt.param }), el("span", { class: "set", text: jt.set }), el("span", { class: "why", text: jt.why }))));
   }
-  // notte che peggiora (nuvole, rugiada, oggetto basso): anche questo non si risolve con le impostazioni
+  // night that gets worse (clouds, dew, low target): settings can't fix this either
   const NT = nightTrend(A);
   if (NT) {
     const tt = trendText(NT);
@@ -2055,7 +2055,7 @@ function renderSimple(A, R, list, totRms, imgScale) {
   }
   if (!R) {
     const longest = Math.max(...list.map((s) => s.duration / 60));
-    // problemi che si vedono gia' nei primi minuti (sessione in corso = l'ultima analizzata)
+    // problems already visible in the first minutes (session in progress = the last one analyzed)
     const early = earlyWarnings(list[list.length - 1]);
     if (early.length) {
       sec.append(el("div", { class: "sechead" }, el("h2", { text: T("Da sistemare subito", "Fix now") }),
@@ -2077,7 +2077,7 @@ function renderSimple(A, R, list, totRms, imgScale) {
     for (const r of todo) ol.append(el("li", {}, el("b", { text: r.param }), el("span", { class: "set", text: r.cur === r.rec ? r.rec : `${r.cur} → ${r.rec}` }), el("span", { class: "why", text: r.todo || r.why })));
     sec.append(ol);
   }
-  // iniziale minuscola dopo i due punti, ma non nelle sigle (DEC, RA)
+  // lowercase initial after the colon, but not in acronyms (DEC, RA)
   const low = (s) => (/^.[a-zà-ù]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s);
   const ok = R.rows.filter((r) => r.status === "ok").map((r) => low(r.param));
   if (ok.length) sec.append(el("p", { class: "lede", text: T(`Già a posto: ${ok.join(", ")}.`, `Already fine: ${ok.join(", ")}.`) }));
@@ -2089,8 +2089,8 @@ function renderSimple(A, R, list, totRms, imgScale) {
   return sec;
 }
 
-// Scheda "Comportamento del grafico": i segni che si guardano a occhio nel grafico di guida,
-// misurati nel log e previsti dalla simulazione con l'aggressivita' attuale e con quella consigliata.
+// "Graph behaviour" card: the signs you look for by eye in the guiding graph,
+// measured in the log and predicted by the simulation with the current and the recommended aggressiveness.
 function behaviorCard(S) {
   const p = S.p, m = S.behavior.ra, md = S.behavior.dec;
   const near = (a) => S.sim.curveRa.reduce((b, c) => (Math.abs(c[0] - a) < Math.abs(b[0] - a) ? c : b));
@@ -2119,7 +2119,7 @@ function behaviorCard(S) {
   tw.append(el("table", {}, el("thead", {}, el("tr", {}, ...head.map((h, i) => el("th", { class: i ? "n" : "", text: h })))), tb));
   card.append(tw);
 
-  // giudizio sul misurato
+  // verdict on the measured behaviour
   const al = el("div", { class: "alerts" });
   const add = (st, txt) => al.append(el("div", { class: "alert" }, chip(st, statusText(st)), el("span", { text: txt })));
   const better = showRec && recA > p.xAggr && rec && rec.runs < m.runs;
@@ -2204,7 +2204,7 @@ function renderSession(S, setup, imgScale) {
   let hC = null, hD = null;
   if (S.pe) {
     const k = cosd(p.dec);
-    // ps (stato del periodo della notte) e' calcolato sopra, negli avvisi
+    // ps (state of the night period) is computed above, in the alerts
     const harm = S.pe.harmonics.map((h) => `${fn(h.period, 0)} s ±${fn(h.amp, 2)}″`).join(", ");
     const cC = el("div", { class: "card" }, el("h3", { text: T(`Errore periodico medio: ${fn(S.pe.period, 1)} s`, `Average periodic error: ${fn(S.pe.period, 1)} s`) }),
       el("p", { class: "note", text: T(`Curva media su ${fn(S.pe.cycles, 1)} cicli: ${fa(S.pe.p2pSky)} picco-picco sul sensore = ${fa(S.pe.p2pEq)} equatoriali (÷ cos ${decTxt(p)}${p.decUnknown ? "" : "°"}). Pendenza massima ${fn(S.pe.slopeMaxEq, 2)}″/s equatoriali. Armoniche: ${harm}.`,
@@ -2297,7 +2297,7 @@ function renderEmpty() {
 function load(text, name, sample, fromDir) {
   const out = document.getElementById("out"); out.classList.add("busy");
   state.src = { name, sample, fromDir, dropped: 0 }; setFname();
-  const keepSel = fromDir && state.name === name ? state.sel : null; // aggiornando lo stesso log resta sulla sessione scelta
+  const keepSel = fromDir && state.name === name ? state.sel : null; // when the same log is refreshed the chosen session stays selected
   setTimeout(() => {
     try {
       state.A = analyzeText(text); state.err = null; state.sel = keepSel; state.name = name; state.Rkey = null; renderAll();
@@ -2309,7 +2309,7 @@ function load(text, name, sample, fromDir) {
 }
 const fileInput = document.getElementById("file"), fitsInput = document.getElementById("fitsFile");
 const isFits = (n) => /\.(fits?|fts)$/i.test(n);
-// log e light possono arrivare insieme (trascinati o scelti): il light prima, cosi' i consigli usano gia' i suoi dati
+// log and light frame can arrive together (dropped or picked): the light first, so the recommendations already use its data
 async function openFiles(files) {
   const fits = files.find((f) => isFits(f.name)), log = files.find((f) => !isFits(f.name));
   if (fits) await openFits(fits);
@@ -2319,9 +2319,9 @@ document.getElementById("pick").addEventListener("click", () => fileInput.click(
 document.getElementById("pickFits").addEventListener("click", () => fitsInput.click());
 fileInput.addEventListener("change", async () => { await openFiles([...fileInput.files]); fileInput.value = ""; });
 fitsInput.addEventListener("change", async () => { await openFiles([...fitsInput.files]); fitsInput.value = ""; });
-// L'overlay copre tutta la finestra (il testo interno ignora il puntatore), quindi l'unico
-// "dragleave" possibile e' l'uscita dalla finestra (relatedTarget null). Si chiude anche al rilascio,
-// a fine trascinamento e con un clic, per non restare mai appeso.
+// The overlay covers the whole window (the text inside ignores the pointer), so the only
+// possible "dragleave" is leaving the window (relatedTarget null). It also closes on drop,
+// at the end of the drag and on a click, so it never stays stuck.
 const drop = document.getElementById("drop");
 const hideDrop = () => { drop.hidden = true; };
 window.addEventListener("dragenter", (e) => { if ([...(e.dataTransfer?.types || [])].includes("Files")) drop.hidden = false; });
@@ -2332,14 +2332,14 @@ drop.addEventListener("click", hideDrop);
 window.addEventListener("drop", async (e) => { e.preventDefault(); hideDrop(); await openFiles([...(e.dataTransfer?.files || [])]); });
 ro.observe(document.getElementById("app"));
 
-// ---- cartella log collegata (solo aprendo la pagina dal PC con Chrome o Edge:
-//      dentro claude.ai le pagine non possono accedere alle cartelle)
+// ---- connected log folder (Chrome or Edge only, page opened from the PC or from a website:
+//      inside claude.ai pages can't access folders)
 const canDir = "showDirectoryPicker" in window && window.top === window.self;
 const dirrow = document.getElementById("dirrow"), dirInfo = document.getElementById("dirInfo"), autoBox = document.getElementById("autoRefresh");
-// dirHandle = cartella dei log; rootHandle = cartella principale, se e' stata collegata quella
-// (per esempio Z:\ invece di Z:\log): da li' si legge anche l'intestazione dell'ultimo light
+// dirHandle = log folder; rootHandle = main folder, if that is the one that was connected
+// (for example Z:\ instead of Z:\log): from there the header of the latest light frame is read too
 let dirHandle = null, rootHandle = null, lastSig = "", autoTimer = null, reopenBtn = null, lastFitsScan = 0;
-// messaggio sulla cartella: tenuto come funzione per poterlo ritradurre al cambio lingua
+// folder message: kept as a function so it can be re-translated when the language changes
 let dirMsg = null;
 const say = (f) => { dirMsg = f; dirInfo.textContent = f(); };
 const kv = (mode, fn) => new Promise((res) => {
@@ -2362,8 +2362,8 @@ async function latestLog(dir) {
   }
   return best;
 }
-// l'ultimo light per data nel nome (ASIAIR: Light_<oggetto>_..._AAAAMMGG-hhmmss_...): non serve aprire i file.
-// Un light senza data nel nome conta solo se non ce ne sono con la data, e allora vale la data del file.
+// the latest light frame by the date in its name (ASIAIR: Light_<target>_..._YYYYMMDD-hhmmss_...): no need to open the files.
+// A light frame without a date in its name counts only if there are none with a date, and then the file date applies.
 async function latestLight(dir, depth = 0, acc = { best: null, key: "", seen: 0 }) {
   for await (const [name, h] of dir.entries()) {
     if (++acc.seen > 5000) break;
@@ -2383,7 +2383,7 @@ async function refreshFits(force) {
     const acc = await latestLight(rootHandle);
     if (!acc.best || (!force && state.fits && state.fits.name === acc.best.name)) return;
     await openFits(await acc.best.getFile());
-  } catch (e) { /* il light e' un di piu': se non si legge resta quello di prima */ }
+  } catch (e) { /* the light frame is a bonus: if it can't be read, the previous one stays */ }
 }
 async function refreshFromDir(force) {
   if (!dirHandle) return;
@@ -2402,9 +2402,9 @@ async function connectDir(handle) {
   let perm = await handle.queryPermission({ mode: "read" });
   if (perm !== "granted") perm = await handle.requestPermission({ mode: "read" });
   if (perm !== "granted") { say(() => T("Accesso alla cartella non concesso.", "Folder access not granted.")); return false; }
-  // collegata una cartella (anche un'altra con "Collega la cartella log..."): il pulsante per riaprire la vecchia non serve piu'
+  // a folder was connected (even another one with "Connect the log folder..."): the button to reopen the old one is no longer needed
   if (reopenBtn) { reopenBtn.remove(); reopenBtn = null; }
-  // collegata la cartella principale (con dentro "log")? allora i log stanno li' e i light nelle altre cartelle
+  // main folder connected (with "log" inside)? then the logs are there and the light frames in the other folders
   let logDir = null;
   try { logDir = await handle.getDirectoryHandle("log"); } catch (e) {}
   dirHandle = logDir || handle; rootHandle = logDir ? handle : null; lastSig = ""; lastFitsScan = 0;
@@ -2428,7 +2428,7 @@ if (canDir) {
   try { autoBox.checked = localStorage.getItem("guida-auto") === "1"; } catch (e) {}
   autoBox.addEventListener("change", () => setAuto(autoBox.checked));
   setAuto(autoBox.checked);
-  // cartella usata l'ultima volta: il browser chiede di nuovo il permesso con un clic
+  // folder used last time: the browser asks for permission again with one click
   kv("readonly", (s) => s.get("dir")).then((h) => {
     if (!h || dirHandle) return;
     const re = el("button", { class: "btn", type: "button" });
@@ -2438,7 +2438,7 @@ if (canDir) {
   });
 }
 
-// ---- cambio lingua
+// ---- language switch
 function applyLang() {
   document.documentElement.lang = LANG;
   document.title = "Guide Tuner";
@@ -2448,7 +2448,7 @@ function applyLang() {
   }
   for (const b of document.querySelectorAll("[data-lang]")) b.setAttribute("aria-pressed", String(b.dataset.lang === LANG));
 }
-// ---- vista semplice (solo cosa cambiare) o completa; la prima volta semplice
+// ---- simple view (only what to change) or full view; simple the first time
 let VIEW = (() => { try { const v = localStorage.getItem("guida-view"); if (v === "simple" || v === "full") return v; } catch (e) {} return "simple"; })();
 function applyView() {
   document.body.classList.toggle("simple", VIEW === "simple");
@@ -2472,8 +2472,8 @@ function setLang(l) {
   if (state.A) { state.Rkey = null; renderAll(); } else renderEmpty();
 }
 for (const b of document.querySelectorAll("[data-lang]")) b.addEventListener("click", () => setLang(b.dataset.lang));
-// collegamenti alla sezione "Come funziona": aprono il riquadro e ci portano la pagina
-// (delegato: i testi con i collegamenti vengono riscritti al cambio lingua)
+// links to the "How it works" section: they open the panel and take the page there
+// (delegated: the texts with links are rewritten when the language changes)
 document.addEventListener("click", (e) => {
   const a = e.target.closest && e.target.closest("a[data-open]");
   const d = a && document.getElementById(a.dataset.open);
@@ -2485,8 +2485,8 @@ document.addEventListener("click", (e) => {
 });
 applyLang(); showFitsInfo();
 
-// ---- versione condivisa online: pulsante per scaricare la pagina da usare sul PC
-// (online le pagine non possono leggere le cartelle; serve il permesso "downloads" di claude.ai)
+// ---- shared online version: button to download the page to use on the PC
+// (inside claude.ai pages can't read folders; claude.ai's "downloads" permission is needed)
 if (DOWNLOAD_FILE && !canDir && window.claude && typeof window.claude.use === "function") {
   window.claude.use("downloads").then((dl) => {
     if (!dl) return;
