@@ -394,6 +394,7 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
       <p data-i18n="m5"><b>Comportamento del grafico.</b> Oltre all'RMS la pagina misura i segni che si guardano a occhio nel grafico di guida: le correzioni di fila nella stessa direzione (guida in ritardo), le correzioni seguite subito da una opposta (la linea rimbalza) e quanto la linea segue un andamento invece di essere solo rumore. Nella scelta dell'aggressività esclude i valori che farebbero rimbalzare la linea più del 12% delle volte, anche se l'RMS fosse di poco migliore.</p>
       <p data-i18n="m6"><b>Velocità di guida.</b> Ogni fase di guida usa la calibrazione fatta prima di lei. Da un solo log la pagina capisce se la velocità impostata è troppo bassa (impulsi lunghi rispetto alla posa di guida, impulsi alla durata massima), ma non come reagisce la meccanica a un'altra velocità: per quello confronta le fasi guidate a velocità diverse, dividendo l'RMS per il rumore veloce di ciascuna (soprattutto seeing, ma anche piccole vibrazioni e l'errore di misura della stella), così una fase con seeing peggiore non sembra peggiore per colpa della velocità.</p>
       <p data-i18n="m7"><b>Come sceglie i consigli.</b> <i>Soglia di RMS</i>: metà della scala di ripresa, cioè 206,265 × pixel ÷ focale (3,76 µm a 310 mm = 2,50″/px, soglia 1,25″). <i>Aggressività</i>: tra i valori con RMS simulato entro il 2% del minimo sceglie il più basso che non fa rimbalzare la linea, e la cambia solo se si guadagna almeno 0,01″. <i>Posa di guida</i>: confronta da 1 a 4 s e la posa del log, esclude le pose che porterebbero l'SNR della stella guida sotto 15 (l'SNR cresce circa con la radice della posa) e, se due pose si equivalgono entro il 10%, preferisce la più lunga. <i>Durata massima</i>: almeno tre volte l'impulso che serve nel tratto peggiore dell'errore periodico, tra 500 e 2500 ms. <i>Modo DEC</i>: una sola direzione se almeno l'85% della durata delle correzioni va dalla stessa parte in ogni fase di guida. <i>Stazionamento polare</i>: la deriva DEC in ″/min × 3,8 dà l'errore minimo in primi d'arco, se la deriva viene tutta dallo stazionamento (flessioni e rifrazione possono aggiungerne un po'); sopra 3′ conviene rifarlo. <i>Velocità di guida</i>: troppo bassa se gli impulsi più lunghi superano il 40% dell'intervallo tra due pose di guida o se più dell'1% tocca la durata massima. <i>Salti improvvisi</i>: in ogni fase di guida di almeno 10 minuti confronta l'RMS RA con la dispersione "tipica" dell'errore (calcolata dalla mediana, che i salti non spostano); se l'RMS è almeno 1,6 volte quella e ci sono almeno 3 salti (e 4 all'ora) oltre 8 volte la dispersione tipica (e comunque oltre 5″), solo in RA, segnala un problema meccanico, dice se succede da un solo lato del meridiano e calcola i consigli senza quelle fasi. Controlla anche se i salti tornano con lo stesso periodo dell'errore periodico: in quel caso vengono da un pezzo della trasmissione che gira, e la pagina consiglia di scrivere all'assistenza.</p>
+      <p data-i18n="m8"><b>Da dove vengono questi numeri.</b> Le formule (scala, fattore 3,8 dello stazionamento, PE × cos(Dec)), i periodi delle montature e il funzionamento degli algoritmi vengono dalla geometria del cielo, dalla documentazione di PHD2 e dai dati dei produttori. Le soglie invece sono criteri scelti per questa pagina: il 2% e il 12% dell'aggressività, l'SNR minimo di 15 (PHD2 segnala in giallo una stella sotto 10), l'85% del modo DEC, il 40% e l'1% della velocità di guida, i limiti dei salti e quelli degli altri avvisi. Per esempio la notte risulta peggiorata se per almeno un'ora la stella si perde in almeno il 30% dei frame o l'errore raddoppia (crescendo di almeno 0,5″); la stella è saturata se lo è in più del 20% dei frame; la guida è scappata se nell'ultimo terzo della fase l'errore resta oltre 30″ e oltre 10 pixel. Sono state tarate su 22 log reali (ZWO AM3N, AM5 e AM5N, Sky-Watcher con EQMod, Vixen Starbook Ten, OnStep, guida ST4 dalla camera e altri log di PHD2 per PC, comprese diverse notti problematiche) e su log simulati con risultato noto, non su regole riconosciute. Spostando ogni soglia del 25% in su o in giù, più della metà non cambiano nessun risultato su quei log; le altre cambiano di solito l'aggressività consigliata di un passo (5%) o un avviso che era già al limite. Sui consigli pesano poco, perché decide la simulazione e la soglia serve solo a scegliere tra valori quasi uguali. Gli avvisi invece, su montature, focali o condizioni molto diverse, possono scattare senza motivo o mancare: per questo la pagina mostra sempre i numeri e il motivo.</p>
       <p data-i18n="m4"><b>Cosa non vede.</b> Vento a raffiche, flessioni, cavi che tirano e cambi di seeing durante la notte entrano nei dati ma non vengono separati. I consigli valgono per condizioni simili a quelle del log.</p>
     </div>
   </details>
@@ -480,11 +481,37 @@ const EN_STATIC = {
   m3: "<b>Simulation.</b> The same algorithm as ASIAIR (hysteresis in RA, Resist Switch in DEC, minimum move and hysteresis fixed as in the log) is applied to the reconstructed motion with different aggressiveness values. With the real settings the simulation reproduces the measured RMS: the page shows the comparison. Simulations with a different exposure use synthetic seeing noise and are meant to compare options, not as an exact prediction.",
   m5: "<b>Graph behaviour.</b> Besides RMS, the page measures the signs you check by eye on the guide graph: corrections in a row in the same direction (guiding lags), corrections followed at once by the opposite one (the line bounces), and how much the line follows a pattern instead of being just noise. When choosing aggressiveness it excludes values that would make the line bounce more than 12% of the time, even if RMS were slightly better.",
   m6: "<b>Guide rate.</b> Each guiding run uses the calibration made before it. From a single log the page can tell whether the rate is too low (pulses long compared with the guide exposure, pulses at the maximum duration), but not how the mechanics react to another rate: for that it compares runs guided at different rates, dividing RMS by each run's fast noise (mostly seeing, but also small vibrations and the star measurement error), so a run with worse seeing doesn't look worse because of the rate.",
+  m8: "<b>Where these numbers come from.</b> The formulas (image scale, the 3.8 polar alignment factor, PE × cos(Dec)), the mounts' periods and how the algorithms work come from sky geometry, the PHD2 documentation and the manufacturers' data. The thresholds, on the other hand, are criteria chosen for this page: the 2% and 12% for aggressiveness, the minimum SNR of 15 (PHD2 shows a star below 10 in yellow), the 85% for DEC mode, the 40% and 1% for guide rate, the limits for jumps and for the other warnings. For example the night counts as worse if for at least an hour the star is lost in at least 30% of frames or the error doubles (growing by at least 0.5″); the star is saturated if it is in more than 20% of frames; guiding ran away if in the last third of the run the error stays above 30″ and above 10 pixels. They were tuned on 22 real logs (ZWO AM3N, AM5 and AM5N, Sky-Watcher via EQMod, Vixen Starbook Ten, OnStep, ST4 guiding through the camera and other PHD2 desktop logs, several problem nights included) and on simulated logs with a known result, not on established rules. Moving each threshold 25% up or down, more than half of them change no result on those logs; the others usually change the advised aggressiveness by one step (5%) or a warning that was already borderline. They matter little for the advice, because the simulation decides and the threshold only picks between nearly equal values. The warnings, on the other hand, may fire for no reason or be missed on very different mounts, focal lengths or conditions: that's why the page always shows the numbers and the reason.",
   m4: "<b>What it can't see.</b> Wind gusts, flexure, dragging cables and seeing changes during the night are in the data but are not separated. The advice applies to conditions similar to those in the log.",
   drop: "Drop the guide log",
 };
 
 // ============================================================ analysis core
+// THRESHOLDS: all the limits the page uses, in one place (11 Nov 2026). They are this program's own criteria,
+// tuned on the logs in Desktop\log (AM3N, AM5, AM5N, EQ6/EQMod, PHD2 desktop from AstroBin) plus the OnStep log on
+// GitHub and the fake logs of sviluppo\test\log_sintetico.mjs; they are not established rules. Physics and
+// manufacturer data (SIDEREAL, the 3.81 polar factor, MOUNTS periods) are not in this list.
+// sviluppo\test\sensibilita.mjs moves each one by ±25% and counts how many results change on the logs.
+//   Advice (the simulation decides, the threshold only breaks near-ties):
+//   - aggressiveness: RMS within 2% of the minimum (pickAggr, "best * 1.02"); change only if gain >= 0.01″;
+//     values bouncing more than FLIP_MAX (12%) excluded; RUNS_HIGH 25% = guiding lags.        8 Nov 2026, 12 Jul log
+//   - guide exposure: SNR_MIN 15 (PHD2 shows a star below 10 in yellow); equal within 10% -> longer exposure
+//   - max duration: 3 x the pulse needed in the worst stretch of the periodic error, 500-2500 ms
+//   - DEC mode: one direction if >= 85% of the correction time goes one way in every run
+//   - guide rate too low: longest pulses > 40% of the cycle, or > 1% of pulses at max duration
+//   Warnings:
+//   - jumps: JUMP_RATIO 1.6, 8 x robust spread and 5″, JUMP_MIN_N 3, JUMP_MIN_PER_H 4; periodic if p <= JUMP_PER_P;
+//     weak star: SNR < JUMP_WEAK_SNR x median in >= JUMP_WEAK_SHARE of the jumps               7-8 and 11 Nov 2026
+//   - night that gets worse: TREND_LOST 30%, TREND_RATIO 2 and +0.5″, at least TREND_MIN_BAD_S (1 h)    8 Nov 2026
+//   - saturated star: SAT_WARN 20% of frames
+//   - guiding ran away: RUN_MIN 30″ and RUN_PX 10 px in the last third of the run                      9 Nov 2026
+//     mount not tracking: motion without guiding within TRACK_TOL (25%) of 15.04″/s x cos(Dec)          11 Nov 2026
+//   - jumps on both axes also count (same ratio and counts on both); identical jumps: JUMP_SAME, JUMP_SAME_SHARE
+//   - periodic error: half of the period chosen wins if it scores at least PE_HALF (85%) of it          11 Nov 2026
+//     with the mount chosen: the half or double matching its stated period wins from PE_MOUNT (60%)     11 Nov 2026
+//   - calibration made above 60° of Dec: advise 20-40° near the meridian                                 11 Nov 2026
+//   - start disturbance: START_* (5 x spread, at least 3″, starts within 120 s, lasts >= 30 s)          9 Nov 2026
+//   - no pulses: corrections in less than 2% of frames
 const SIDEREAL = 15.041;
 const DIR = { E: -1, W: 1, N: -1, S: 1 };
 const cosd = (d) => Math.cos((d * Math.PI) / 180);
@@ -513,6 +540,21 @@ function interp(t, y, tt) {
   return tt.map((x) => { while (j < t.length - 2 && t[j + 1] < x) j++; const w = (x - t[j]) / (t[j + 1] - t[j] || 1); return y[j] + w * (y[j + 1] - y[j]); });
 }
 
+// Guiding settings that matter for the result. Keys of the session header (p) and how PHD2 desktop names them in the
+// "Guiding parameter change" lines (for example "RA Hysteresis Aggression", "Dec Max Duration", "Exposure").
+const SETTING_CHANGE_RE = /Exposure|Max Duration|Aggress|Hysteresis|Min ?Move|algorithm|Guide Mode|Backlash comp amount/i;
+function settingKey(name) {
+  const dec = /^(Dec|Y)\b/i.test(name);
+  if (/Exposure/i.test(name)) return "exposure";
+  if (/Max Duration/i.test(name)) return dec ? "maxDEC" : "maxRA";
+  if (/Aggress/i.test(name)) return dec ? "yAggr" : "xAggr";
+  if (/Min ?Move/i.test(name)) return dec ? "yMinMo" : "xMinMo";
+  if (/algorithm/i.test(name)) return dec ? "yAlgo" : "xAlgo";
+  if (/Guide Mode/i.test(name)) return "decMode";
+  if (/Backlash/i.test(name)) return "backlash";
+  if (/Hysteresis/i.test(name)) return "xHyst";
+  return null;
+}
 function parseLog(text) {
   const lines = text.split(/\r?\n/);
   const sessions = [], calibrations = [];
@@ -530,6 +572,8 @@ function parseLog(text) {
     }
     if (cal && !cur) {
       if (line.includes("Calibration Step =")) cal.step = num(/Calibration Step = (\d+)/, line);
+      // calibration finished (also RA-only ones, with DEC Off); a failed attempt never writes this line
+      if (line.startsWith("Calibration complete")) cal.done = true;
       if (posLine(line)) cal.dec = num(/Dec = ([-\d.]+)/, line);
       let m = line.match(/^(West|North) calibration complete\. Angle = ([-\d.]+) deg, Rate = ([\d.]+) px\/sec/);
       if (m) cal.results.push({ axis: m[1], angle: +m[2], rate: +m[3] });
@@ -539,7 +583,7 @@ function parseLog(text) {
     if (line.startsWith("Guiding Begins")) {
       cal = null;
       // calN: how many calibrations were already in the log when this session started (the last complete one applies)
-      cur = { start: line.slice(18).trim(), end: null, p: {}, frames: [], events: [], calN: calibrations.length };
+      cur = { start: line.slice(18).trim(), end: null, p: {}, frames: [], events: [], changes: [], calN: calibrations.length };
       sessions.push(cur); settling = false; continue;
     }
     if (!cur) continue;
@@ -551,6 +595,8 @@ function parseLog(text) {
       p.xAngle = num(/xAngle = ([-\d.]+)/, line); p.xRate = num(/xRate = ([\d.]+)/, line);
       p.guideOff = /guiding disabled/.test(line);
       p.yAngle = num(/yAngle = ([-\d.]+)/, line); p.yRate = num(/yRate = ([\d.]+)/, line);
+      // DEC not calibrated (RA-only calibration, DEC guide mode Off): ASIAIR writes yRate = 1230000000 (3 Jul 2021 log)
+      if (p.yRate > 1e4) p.yRate = null;
     }
     if (line.startsWith("X guide algorithm")) {
       p.xAlgo = (line.match(/= ([^,]+)/) || [])[1]?.trim();
@@ -568,6 +614,7 @@ function parseLog(text) {
       p.maxRA = num(/Max RA duration = (\d+)/, line);
       p.maxDEC = num(/Max DEC duration = (\d+)/, line);
       p.decMode = (line.match(/DEC guide mode = (\w+)/) || [])[1];
+      p.asiair = line.includes("phdlab_placeholder"); // ASIAIR writes this placeholder, PHD2 desktop the real step
     }
     if (line.includes("Cal Dec =")) p.calDec = num(/Cal Dec = ([-\d.]+)/, line);
     if (posLine(line)) {
@@ -577,6 +624,10 @@ function parseLog(text) {
     if (line.startsWith("INFO:")) {
       if (line.includes("Settling started")) settling = true;
       else if (/Settling (complete|failed)/.test(line)) settling = false;
+      // settings changed while guiding (PHD2 desktop: "Guiding parameter change, Exposure = 2000 ms"); ASIAIR
+      // doesn't write them, there the header of the next phase shows the new values
+      const pc = line.match(/Guiding parameter change, ([^=]+?)\s*=\s*([^\s,]+)/);
+      if (pc && SETTING_CHANGE_RE.test(pc[1])) cur.changes.push({ at: cur.frames.length, name: pc[1].trim(), value: pc[2] });
       const m = line.match(/new lock pos = ([-\d.]+), ([-\d.]+)/);
       if (m) {
         const d = line.match(/DITHER by ([-\d.]+), ([-\d.]+)/);
@@ -592,6 +643,8 @@ function parseLog(text) {
       cur.frames.push({
         i: cur.frames.length, t: +f[1], mount: (f[2] || "").replace(/"/g, ""),
         ra: g(5), dec: g(6), raDur: g(9), raDir: f[10], decDur: g(11), decDir: f[12],
+        // correction computed by the algorithm (px): used to find the aggressiveness really used (aggrUsed)
+        raG: (f[7] ?? "").trim() === "" ? null : parseFloat(f[7]), decG: (f[8] ?? "").trim() === "" ? null : parseFloat(f[8]),
         snr: g(16), mass: g(15), err: +f[17] || 0, settling,
       });
     }
@@ -615,9 +668,11 @@ function makeResistSwitch(aggr, minMo) {
     return r * aggr;
   };
 }
-// Each pulse is assumed to end before the next exposure: PHD2 and ASIAIR wait for the pulse to end
-// before resuming (in the logs the interval between frames gets longer when there are pulses,
-// e.g. AM5N with 0.5 s exposures: 0.5-0.9 s). Reconstruction and simulation use the same assumption.
+// Each pulse is assumed to end before the next exposure. Checked on 11 Nov 2026 (sviluppo\test\test_verifiche.mjs,
+// slope of the frame interval versus pulse length): PHD2 desktop waits (slope 0.8-1.2), ASIAIR mostly doesn't
+// (0-0.4; 1.2 only on AM5N 25 Mar with 0.5 s exposures), so part of a correction can land in the next exposure.
+// Fake logs with 30-50% of every correction arriving late: the advised aggressiveness stays within 0-2% of the true best.
+// Reconstruction and simulation use the same assumption.
 // (Until 8 Nov 2026 there was a phiOf function for the part of a pulse falling inside the next exposure, but
 // the "pending" part was applied immediately anyway: it had no effect, so it was removed.)
 // sg (optional): receives the direction of each correction (-1, 0, +1), to study the behaviour
@@ -717,6 +772,11 @@ function peScan(t, y) {
 }
 // the shortest period among the strong local maxima (>= 90% of the maximum): avoids picking 2P or 3P,
 // which fold the same curve and have almost the same score
+// A motion that repeats every P also repeats every 2P, and slow drifts favour the longer fold: if half of the period
+// chosen scores at least PE_HALF of it, the half is the true period (7 Feb 2023 log, EQMod: 951 s chosen, 478 s
+// scoring 0.90-0.95 of it; the EQ6 worm turns in 478.7 s). Narrow margin: on the 12 Jul 2026 (286 s) and
+// 17 Jan 2022 (477 s) logs the half scores 0.75-0.8 and must NOT win, so 0.85 sits in the middle.
+const PE_HALF = 0.85;
 function pickPeriod(scan) {
   if (!scan || !scan.length) return null;
   const vmax = Math.max(...scan.map((x) => x[1]));
@@ -724,6 +784,13 @@ function pickPeriod(scan) {
   let P = scan.find((x) => x[1] === vmax)[0];
   for (let i = 1; i < scan.length - 1; i++) {
     if (scan[i][1] >= 0.9 * vmax && scan[i][1] >= scan[i - 1][1] && scan[i][1] >= scan[i + 1][1]) { P = scan[i][0]; break; }
+  }
+  for (;;) {
+    const vP = scan.find((x) => x[0] === P)[1];
+    const near = scan.filter((x) => Math.abs(x[0] - P / 2) <= 0.03 * (P / 2));
+    if (!near.length) break;
+    const h = near.reduce((m, x) => (x[1] > m[1] ? x : m));
+    if (h[1] >= PE_HALF * vP) P = h[0]; else break;
   }
   return P;
 }
@@ -765,32 +832,60 @@ const AGGRS = []; for (let a = 30; a <= 100; a += 5) AGGRS.push(a / 100);
 const JUMP_RATIO = 1.6, JUMP_MIN_N = 3, JUMP_MIN_PER_H = 4;
 // jump times (for periodicity): a jump and its rebound within 60 s count as one
 const JUMP_MERGE_S = 60;
-function findJumps(ra, dec, hours, times) {
+// A jump can also be a wrong measurement of the star rather than a real movement (faint star, passing cloud, a
+// neighbouring star taking over): RA-only jumps during which (or just before which) the guide star SNR falls below
+// half of its median are counted as "weak star" (11 Nov 2026).
+const JUMP_WEAK_SNR = 0.5, JUMP_WEAK_SHARE = 0.3;
+// identical jumps: within 10% of the median jump vector, in at least 80% of the jumps (only 10 Jul 2026 S8 qualifies)
+const JUMP_SAME = 0.1, JUMP_SAME_SHARE = 0.8;
+function findJumps(ra, dec, hours, times, snr) {
   const robust = (a) => 1.4826 * median(a.map(Math.abs));
   const sR = robust(ra), sD = robust(dec);
   // zero spread (simulated logs or errors rounded to zero): the comparison makes no sense
   if (!(sR > 0) || !(sD > 0) || !(hours > 0)) return null;
   const thr = Math.max(5, 8 * sR), thrD = Math.max(5, 8 * sD);
-  let n = 0, raOnly = 0, inE = false, maxDec = 0, i0 = 0;
-  const ev = [];
-  const end = () => {
+  const snrLow = snr && snr.length === ra.length ? JUMP_WEAK_SNR * median(snr) : null;
+  let n = 0, raOnly = 0, weak = 0, inE = false, maxDec = 0, i0 = 0;
+  const ev = [], steps = [];
+  const end = (i1) => {
     if (maxDec >= thr / 2) return;
     raOnly++;
+    if (snrLow > 0 && Math.min(...snr.slice(Math.max(0, i0 - 2), i1)) < snrLow) weak++;
     if (times) { const t = times[i0]; if (!ev.length || t - ev[ev.length - 1] >= JUMP_MERGE_S) ev.push(t); }
   };
   for (let i = 0; i < ra.length; i++) {
-    if (Math.abs(ra[i]) > thr) { if (!inE) { n++; inE = true; maxDec = 0; i0 = i; } maxDec = Math.max(maxDec, Math.abs(dec[i])); }
-    else if (inE) { inE = false; end(); }
+    if (Math.abs(ra[i]) > thr) {
+      if (!inE) { n++; inE = true; maxDec = 0; i0 = i; }
+      maxDec = Math.max(maxDec, Math.abs(dec[i]));
+    } else if (inE) { inE = false; end(i); }
   }
-  if (inE) end();
+  if (inE) end(ra.length);
   let nD = 0; inE = false;
   for (const d of dec) { if (Math.abs(d) > thrD) { if (!inE) { nD++; inE = true; } } else inE = false; }
   const ratio = rms(ra) / sR, ratioD = rms(dec) / sD;
   const peak = Math.max(...ra.map(Math.abs));
-  const flag = ratio >= JUMP_RATIO && raOnly >= JUMP_MIN_N && raOnly / hours >= JUMP_MIN_PER_H;
+  const raFlag = ratio >= JUMP_RATIO && raOnly >= JUMP_MIN_N && raOnly / hours >= JUMP_MIN_PER_H;
+  // Jumps on both axes at once (10 Jul 2026 log, EQMod, S8: 143 minutes, RMS 15″/32″, a jump every few minutes)
+  // count too: before 11 Nov 2026 only RA-only jumps did, so that run ended up in the advice.
+  const bothFlag = ratio >= JUMP_RATIO && ratioD >= JUMP_RATIO && n >= JUMP_MIN_N && n / hours >= JUMP_MIN_PER_H && nD / hours >= JUMP_MIN_PER_H;
+  const flag = raFlag || bothFlag;
   // DEC also jumps often: more likely wind, knocks or cables pulling
   const both = flag && ratioD >= JUMP_RATIO && nD / hours >= JUMP_MIN_PER_H;
-  return { n, raOnly, hours, perHour: raOnly / hours, peak, thr, ratio, ratioD, nD, flag, both, times: ev };
+  // Always the same jump, from one frame to the next (10 Jul 2026: 29 jumps of 76″ RA and 130″ DEC, 97% identical):
+  // something that snaps between two positions, not sky or gears
+  // (a jump starts when either axis leaves its band; the step is measured from the frame before)
+  for (let i = 1, was = false; i < ra.length; i++) {
+    const big = Math.abs(ra[i]) > thr || Math.abs(dec[i]) > thrD;
+    if (big && !was) steps.push([ra[i] - ra[i - 1], dec[i] - dec[i - 1]]);
+    was = big;
+  }
+  let fixed = null;
+  if (steps.length >= JUMP_MIN_N + 2) {
+    const mr = median(steps.map((d) => d[0])), md = median(steps.map((d) => d[1])), L = Math.hypot(mr, md);
+    const share = steps.filter((d) => Math.hypot(d[0] - mr, d[1] - md) <= Math.max(1, JUMP_SAME * L)).length / steps.length;
+    if (L >= 10 && share >= JUMP_SAME_SHARE) fixed = { ra: mr, dec: md, share, n: steps.length };
+  }
+  return { n, raOnly, weak, hours, perHour: raOnly / hours, peak, thr, ratio, ratioD, nD, flag, both, fixed, times: ev };
 }
 // Jumps that recur with the periodic error period (one specific spot on a rotating part): each
 // jump is placed on a circle (phase = time / period) and we measure how much the phases cluster at the same point,
@@ -834,14 +929,19 @@ function jumpSummary(A) {
   // the side only counts if there is at least one clean session on the other side, and the other side really
   // guides better (1 Nov 2023 log: one borderline run after the flip, the runs before it just as rough)
   const cleanOther = side ? clean.filter((s) => s.p.pier && s.p.pier !== side) : [];
-  const otherOk = cleanOther.length > 0 && Math.max(...cleanOther.map((s) => s.perf.raRms)) < 0.8 * Math.min(...hit.map((s) => s.perf.raRms));
+  // and not if on the same side there is at least half an hour of clean guiding (10 Jul 2026: S8 jumps after the flip,
+  // S7 on the same side clean for 48 minutes)
+  const cleanSameS = side ? clean.filter((s) => s.p.pier === side).reduce((a, s) => a + (s.duration || 0), 0) : 0;
+  const otherOk = cleanOther.length > 0 && cleanSameS < 1800 && Math.max(...cleanOther.map((s) => s.perf.raRms)) < 0.8 * Math.min(...hit.map((s) => s.perf.raRms));
   // Where the target is. In ASIAIR logs "Pier side = West" goes with a negative hour angle, i.e. target
   // east of the meridian (before the flip): checked on AM3N and AM5N logs. The hour angle is used if present.
   const has = hit.filter((s) => s.p.ha != null);
   const objEast = has.length ? median(has.map((s) => s.p.ha)) < 0 : side === "West";
-  const h = hit.reduce((a, s) => a + s.jumps.hours, 0);
-  return { hit, clean, side: otherOk ? side : null, objEast, both: hit.every((s) => s.jumps.both), periodic: jumpPeriod(hit, A.pe?.period),
-    peak: Math.max(...hit.map((s) => s.jumps.peak)), perHour: hit.reduce((a, s) => a + s.jumps.raOnly, 0) / h,
+  const h = hit.reduce((a, s) => a + s.jumps.hours, 0), both = hit.every((s) => s.jumps.both);
+  const fx = hit.map((s) => s.jumps.fixed).filter(Boolean).sort((a, b) => b.n - a.n)[0] || null;
+  return { hit, clean, side: otherOk ? side : null, objEast, both, fixed: fx, periodic: jumpPeriod(hit, A.pe?.period),
+    peak: Math.max(...hit.map((s) => s.jumps.peak)), perHour: hit.reduce((a, s) => a + (both ? s.jumps.n : s.jumps.raOnly), 0) / h,
+    weak: hit.reduce((a, s) => a + (s.jumps.weak || 0), 0) / Math.max(1, hit.reduce((a, s) => a + s.jumps.raOnly, 0)),
     worstRms: Math.max(...hit.map((s) => s.perf.raRms)), cleanRms: cleanOther.length ? Math.max(...cleanOther.map((s) => s.perf.raRms)) : null };
 }
 // texts of the jumps warning (Simple view, Full view and early warnings)
@@ -856,6 +956,8 @@ function jumpText(J) {
   let why = J.both
     ? T(`In ${ss} l'errore fa salti improvvisi in entrambi gli assi (fino a ${fn(J.peak, 0)}″ in RA). Di solito sono vento, urti o cavi che tirano, non le impostazioni di guida. `,
         `In ${ss} the error jumps suddenly on both axes (up to ${fn(J.peak, 0)}″ in RA). Usually that's wind, knocks or dragging cables, not the guiding settings. `)
+      + (J.fixed ? T(`Ogni salto però è uguale: da una posa all'altra la stella si sposta di colpo di circa ${fn(Math.abs(J.fixed.ra), 0)}″ in RA e ${fn(Math.abs(J.fixed.dec), 0)}″ in DEC (${pf(J.fixed.share)} dei salti), poi la guida la riporta indietro. Uno spostamento sempre identico e istantaneo non viene dal vento né dalla trasmissione: di solito è qualcosa che scatta tra due posizioni, per esempio il tubo o la camera di guida che si muovono nel fissaggio o un cavo che tira e poi rilascia. Controlla che tubo e camera di guida siano ben stretti e che i cavi siano liberi. `,
+          `Every jump is the same, though: from one frame to the next the star moves suddenly by about ${fn(Math.abs(J.fixed.ra), 0)}″ in RA and ${fn(Math.abs(J.fixed.dec), 0)}″ in DEC (${pf(J.fixed.share)} of the jumps), then guiding brings it back. An always identical, instant shift doesn't come from wind or gears: usually something snaps between two positions, for example the guide scope or guide camera moving in its mount, or a cable pulling and then letting go. Check that guide scope and guide camera are tight and that cables are free. `) : "")
     : T(`In ${ss} l'errore RA fa salti improvvisi (circa ${fn(J.perHour, 0)} all'ora, fino a ${fn(J.peak, 0)}″) mentre la DEC resta tranquilla. Non dipende dalle impostazioni di guida: nessun valore in ASIAIR li elimina. `,
         `In ${ss} the RA error jumps suddenly (about ${fn(J.perHour, 0)} per hour, up to ${fn(J.peak, 0)}″) while DEC stays calm. It doesn't depend on the guiding settings: no value in ASIAIR removes them. `);
   if (J.side) why += T(`Succede solo con l'oggetto a ${objIt} del meridiano, cioè ${whenIt} (nel log "Pier side = ${J.side}"); con l'oggetto a ${otherIt}, ${otherWhenIt}, la guida è normale${J.cleanRms != null ? ` (RMS RA fino a ${fa(J.cleanRms)} contro ${fa(J.worstRms)})` : ""}: è il segno tipico di un problema meccanico legato a come è girata la montatura. `,
@@ -867,8 +969,12 @@ function jumpText(J) {
       `The jumps come back at regular intervals, about every ${sec} s: the same period as the mount's periodic error. Most likely they come from one precise spot on a drive part that turns once in that time (a gear or a bearing), not from cables or wind. Contact the manufacturer's support, attach this log and explain that the jumps repeat about every ${sec} s${onlyEn}. Meanwhile check RA balance and the load versus the mount's limit: a load pushing to one side makes the defect show more.`);
     return { param, set, why };
   }
+  // jumps that are not periodic and often come with a faint star: they may be a wrong measurement, not a real movement
+  if (!J.both && J.weak >= JUMP_WEAK_SHARE)
+    why += T(`N${artPc(J.weak, "nel").slice(1)} dei salti la stella guida era molto più debole del solito: quei salti potrebbero essere anche una misura sbagliata della stella (stella debole, nuvola di passaggio, una stella vicina), non un movimento vero. Prova una stella più luminosa e isolata; se i salti restano, è la montatura. `,
+      `In ${pf(J.weak)} of the jumps the guide star was much fainter than usual: those jumps could also be a wrong measurement of the star (faint star, passing cloud, a neighbouring star), not a real movement. Try a brighter, isolated star; if the jumps stay, it's the mount. `);
   why += J.both
-    ? T("Controlla il vento sul tubo, i cavi (che non tirino né si impiglino) e che il treppiede sia stabile.", "Check wind on the tube, the cables (not pulling or snagging) and that the tripod is steady.")
+    ? (J.fixed ? "" : T("Controlla il vento sul tubo, i cavi (che non tirino né si impiglino) e che il treppiede sia stabile.", "Check wind on the tube, the cables (not pulling or snagging) and that the tripod is steady."))
     : T("Controlla: cavi che tirano o si impigliano mentre la montatura gira, bilanciamento in RA, morsetti e viti di tubo e barra, peso rispetto al limite della montatura. Se continua, scrivi all'assistenza del produttore allegando questo log.",
         "Check: cables pulling or snagging as the mount turns, RA balance, clamps and screws of the tube and dovetail, load versus the mount's limit. If it goes on, contact the manufacturer's support and attach this log.");
   return { param, set, why };
@@ -902,10 +1008,46 @@ function sessionBlocks(frames, scale) {
   return blocks.filter((B) => B && B.all >= 60);
 }
 const blockRms = (ra, dec) => (ra.length >= 60 ? Math.hypot(std(ra), std(dec)) : null);
+// Settings changed between the reference block and the end of the stretch that got worse (11 Nov 2026): then the
+// worsening may also come from the change, and the page must not say that it doesn't depend on the settings.
+// Header values of the phases are compared with those of the reference phase; the changes written inside a phase
+// count only if the value really differs from the previous one (PHD2 desktop repeats some lines at every start).
+const SETTING_KEYS = ["exposure", "xAggr", "yAggr", "xHyst", "xMinMo", "yMinMo", "maxRA", "maxDEC", "xAlgo", "yAlgo", "decMode"];
+const SETTING_LABELS = {
+  exposure: ["posa di guida", "guide exposure"], xAggr: ["aggressività RA", "RA aggressiveness"], yAggr: ["aggressività DEC", "DEC aggressiveness"],
+  xHyst: ["isteresi RA", "RA hysteresis"], xMinMo: ["spostamento minimo RA", "RA minimum move"], yMinMo: ["spostamento minimo DEC", "DEC minimum move"],
+  maxRA: ["durata massima RA", "max RA duration"], maxDEC: ["durata massima DEC", "max DEC duration"], xAlgo: ["algoritmo RA", "RA algorithm"],
+  yAlgo: ["algoritmo DEC", "DEC algorithm"], decMode: ["modo guida DEC", "DEC guide mode"], backlash: ["compensazione del backlash", "backlash compensation"],
+  rate: ["velocità di guida", "guide rate"],
+};
+function settingsChanged(A, ref, tEnd, bad) {
+  const keys = new Set(), refS = ref.s;
+  for (const s of new Set(bad.map((B) => B.s))) {
+    for (const k of SETTING_KEYS) if (s.p[k] != null && refS.p[k] != null && s.p[k] !== refS.p[k]) keys.add(k);
+    if (s.guideRa > 0 && refS.guideRa > 0 && nearestStep(s.guideRa) !== nearestStep(refS.guideRa)) keys.add("rate");
+  }
+  const lastVal = new Map();
+  for (const s of A.results) {
+    const t0 = Date.parse(s.start.replace(" ", "T")) / 1000;
+    // aggressiveness changed during a run without a line in the log (ASIAIR): found from the corrections (aggrUsed)
+    const sEnd = t0 + (s.duration ?? 0);
+    if (isFinite(t0) && sEnd >= ref.abs && t0 <= tEnd) { if (s.p.aggrMid?.ra) keys.add("xAggr"); if (s.p.aggrMid?.dec) keys.add("yAggr"); }
+    for (const k of ["exposure", "maxRA", "maxDEC"]) if (s.p[k] != null) lastVal.set(k, +s.p[k]);
+    for (const c of s.changes || []) {
+      if (!c.key) continue;
+      const v = isFinite(+c.value) ? +c.value : c.value, prev = lastVal.get(c.key);
+      lastVal.set(c.key, v);
+      const abs = t0 + c.t;
+      if (prev !== undefined && prev !== v && isFinite(abs) && abs >= ref.abs && abs <= tEnd) keys.add(c.key);
+    }
+  }
+  return Object.keys(SETTING_LABELS).filter((k) => keys.has(k));
+}
 function nightTrend(A) {
   const blocks = [];
   for (const s of A.results) {
-    if (s.skipped || !s.blocks) continue;
+    // runs where guiding ran away (or the mount wasn't tracking) have their own warning (22 May 2023 log)
+    if (s.skipped || !s.blocks || s.runaway) continue;
     const t0 = Date.parse(s.start.replace(" ", "T")) / 1000;
     if (!isFinite(t0)) continue;
     for (const B of s.blocks) blocks.push({ ...B, s, abs: t0 + B.t0, lost: 1 - B.ra.length / B.all, rms: blockRms(B.ra, B.dec) });
@@ -929,7 +1071,9 @@ function nightTrend(A) {
   const live = bad.filter((B) => !dead.has(B)), use = live.length ? live : bad;
   const ra = use.flatMap((B) => B.ra), dec = use.flatMap((B) => B.dec), snr = use.flatMap((B) => B.snr), all = use.reduce((a, B) => a + B.all, 0);
   const first = bad[0];
+  const last = bad[bad.length - 1];
   return { from: clockAdd(first.s.start, first.t0), fromIdx: first.s.idx, sessions: [...new Set(bad.map((B) => B.s.idx))],
+    changed: settingsChanged(A, ref, last.abs + dur(last), bad),
     refRms: ref.rms, refSnr: median(ref.snr), badRms: blockRms(ra, dec), badSnr: snr.length >= 30 ? median(snr) : null,
     lost: 1 - ra.length / all, badH: live.reduce((a, B) => a + dur(B), 0) / 3600, deadH: dead.size ? deadS / 3600 : 0,
     deadFrom: dead.size ? clockAdd(blocks[deadI].s.start, blocks[deadI].t0) : null };
@@ -942,8 +1086,15 @@ function trendText(W) {
   if (W.lost >= 0.05) { parts.push(`stella persa nel ${pf(W.lost, 0)} dei frame`); partsEn.push(`star lost in ${pf(W.lost, 0)} of frames`); }
   const param = T("La guida peggiora durante la notte", "Guiding gets worse during the night");
   const set = T(`dalle ${W.from} (${ss})`, `from ${W.from} (${ss})`);
-  const cause = T("Succede quando arrivano nuvole o foschia, si forma rugiada sull'ottica di guida o l'oggetto scende basso: non dipende dalle impostazioni di guida. ",
-    "This happens when clouds or haze come in, dew forms on the guide optics or the target gets low: it doesn't depend on the guiding settings. ");
+  // the log shows that guiding got worse, not why: the usual causes are given as such
+  const ch = W.changed || [];
+  const chIt = ch.map((k) => SETTING_LABELS[k][0]).join(", "), chEn = ch.map((k) => SETTING_LABELS[k][1]).join(", ");
+  const cause = T("Di solito succede quando arrivano nuvole o foschia, si forma rugiada sull'ottica di guida o l'oggetto scende basso. Il log mostra che la guida è peggiorata, non il perché. ",
+    "Usually this happens when clouds or haze come in, dew forms on the guide optics or the target gets low. The log shows that guiding got worse, not why. ")
+    + (ch.length
+      ? T(`Tra l'inizio della notte e il peggioramento sono cambiate anche alcune impostazioni (${chIt}): il peggioramento può dipendere anche da questo. `,
+          `Between the start of the night and the worsening some settings also changed (${chEn}): the worsening may also come from that. `)
+      : T("Le impostazioni di guida non sono cambiate nel frattempo. ", "The guiding settings didn't change in the meantime. "));
   let why = W.badH > 0
     ? T(`Dalle ${W.from}, per circa ${fn(W.badH, 1)} h di guida, rispetto all'inizio della notte: ${parts.join(", ")}. `,
         `From ${W.from}, for about ${fn(W.badH, 1)} h of guiding, compared with the start of the night: ${partsEn.join(", ")}. `) + cause
@@ -981,20 +1132,69 @@ function startSettling(frames, scale) {
 // and the star lost 87% of the time): in the last third of the run the error stays far from zero (median above
 // RUN_MIN arcseconds and RUN_PX pixels) instead of coming back. Clouds don't do this: the star is lost but the frames
 // that are measured stay near zero. Runs without pulses have their own warning.
-const RUN_MIN = 30, RUN_PX = 10;
-function runawayCheck(series, scale, nAll, nOk) {
+// Mount not tracking (22 May 2023 ASIAIR log, Vixen Starbook Ten: in 26 runs the RA error grows by 9-10″/s with every
+// pulse at the maximum, the AutoRun log shows every plate solve failing). The motion without guiding (error plus the
+// corrections sent, as in the reconstruction) then moves at the sky's speed, 15.04″/s x cos(Dec): there it was 13.1″/s
+// at Dec 28°. TRACK_TOL: how close to the sky's speed it must be.
+const RUN_MIN = 30, RUN_PX = 10, TRACK_TOL = 0.25;
+function runawayCheck(series, scale, nAll, nOk, trk) {
   const n = series.ra.length;
   if (n < 30) return null;
   const tail = (a) => median(a.slice(Math.floor((2 * n) / 3)).map(Math.abs));
   const lim = Math.max(RUN_MIN, RUN_PX * scale), ra = tail(series.ra), dec = tail(series.dec);
   if (ra < lim && dec < lim) return null;
   const axis = ra >= dec ? "RA" : "DEC", peak = Math.max(...(axis === "RA" ? series.ra : series.dec).map(Math.abs));
-  return { axis, peak, peakPx: peak / scale, lost: nAll ? 1 - nOk / nAll : 0 };
+  let drift = null, sky = null;
+  if (axis === "RA" && trk && trk.dec != null && trk.rate > 0) {
+    let C = 0; const u = trk.frames.map((f) => { const v = f.ra * scale + C; C += (DIR[f.raDir] || 0) * trk.rate * scale * (f.raDur / 1000); return v; });
+    drift = Math.abs(linfit(trk.frames.map((f) => f.t), u).b); sky = SIDEREAL * cosd(trk.dec);
+  }
+  return { axis, peak, peakPx: peak / scale, lost: nAll ? 1 - nOk / nAll : 0, drift, sky, noTrack: drift != null && Math.abs(drift / sky - 1) <= TRACK_TOL };
 }
 
+// Aggressiveness really used, from the correction the log writes for every frame (RAGuideDistance, DECGuideDistance).
+// ASIAIR doesn't write a change made while guiding: the header keeps the old value until the next run (logs of
+// 22 Oct 2023 and 1 Nov 2023, nights of tests: header 60%, corrections matching about 35%). Found on 11 Nov 2026 with
+// sviluppo\test\test_verifiche.mjs: on normal nights the formula matches the logged correction in 96-99.8% of frames.
+// Hysteresis: correction = ((1 - h) x error + h x previous correction) x aggressiveness; Resist Switch: error x
+// aggressiveness when it corrects. Frames with a small denominator are skipped (values rounded to 3 decimals).
+// If fewer than AGGR_FIT of the frames match the header within AGGR_TOL, the value of the last third of the run is used.
+// Only for ASIAIR logs: PHD2 desktop writes its changes ("Guiding parameter change") and with multi-star guiding the
+// algorithm works on an average of several stars, not on the logged error (7 Mar 2024 log: false changes).
+// Checked: in the 12 Jul 2026 log S1 the header says DEC 100%, the corrections 65%, and S2's header says 65%.
+const AGGR_FIT = 0.8, AGGR_TOL = 0.03;
+function aggrUsed(frames, p) {
+  const out = {};
+  if (!p.asiair) return out;
+  for (const ax of ["ra", "dec"]) {
+    const set = ax === "ra" ? p.xAggr : p.yAggr;
+    if (!(set > 0) || (ax === "ra" ? p.xAlgo && p.xAlgo !== "Hysteresis" : p.yAlgo && p.yAlgo !== "Resist Switch")) continue;
+    const g = ax + "G", minMo = (ax === "ra" ? p.xMinMo : p.yMinMo) ?? 0.1, h = ax === "ra" ? p.xHyst || 0 : 0;
+    const a = [];
+    for (let i = 1; i < frames.length; i++) {
+      const f = frames[i], fp = frames[i - 1];
+      if (!okFrame(f) || f.settling || !f[g] || Math.abs(f[ax]) <= minMo) continue;
+      if (h && (!okFrame(fp) || fp.settling || fp[g] == null)) continue;
+      const den = (1 - h) * f[ax] + (h ? h * fp[g] : 0);
+      if (Math.abs(den) >= 0.05) a.push(f[g] / den);
+    }
+    if (a.length < 50) continue;
+    const fit = a.filter((x) => Math.abs(x / set - 1) < AGGR_TOL).length / a.length;
+    if (fit >= AGGR_FIT) continue;
+    const m = median(a.slice(Math.floor((2 * a.length) / 3))), r5 = Math.round(m * 20) / 20;
+    const last = Math.abs(r5 - m) < 0.01 ? r5 : Math.round(m * 100) / 100;
+    if (last > 0 && Math.abs(last - set) >= 0.01) out[ax] = { set, last, fit };
+  }
+  return out;
+}
 function analyzeSession(s, idx, ref) {
   const p = s.p;
   s = { ...s, frames: startSettling(s.frames, p.scale) };
+  // aggressiveness changed during the run and not written in the header: from here on the value really used at the
+  // end of the run counts (it is the one still set in ASIAIR); the header value stays in xAggrSet / yAggrSet
+  const aggrMid = p.aggrMid ?? (p.aggrMid = aggrUsed(s.frames, p));
+  if (aggrMid.ra && p.xAggrSet == null) { p.xAggrSet = p.xAggr; p.xAggr = aggrMid.ra.last; }
+  if (aggrMid.dec && p.yAggrSet == null) { p.yAggrSet = p.yAggr; p.yAggr = aggrMid.dec.last; }
   // Mount position not valid (1 Nov 2023 ASIAIR log, S9-S13: "Dec = 90.0 deg ... Pier side = Unknown" and xRate = 0
   // while guiding on a star): the RA rate the mount really had is unknown, so the run is left out of the advice.
   if (p.dec != null && Math.abs(p.dec) >= 89.9 && !p.pier) { p.dec = null; p.posBad = true; }
@@ -1002,15 +1202,21 @@ function analyzeSession(s, idx, ref) {
   // is assumed, i.e. no RA rate rescaling, as PHD2 does in that case. Texts show "?".
   if (p.dec == null) { p.decUnknown = true; p.dec = ref.calDec ?? p.calDec ?? 0; }
   const valid = s.frames.filter(okFrame);
-  const base = { idx, start: s.start, end: s.end, p, nValid: valid.length, calRef: ref };
+  const lastT = s.frames.length ? s.frames[s.frames.length - 1].t : 0;
+  const changes = (s.changes || []).map((c) => ({ ...c, key: settingKey(c.name), t: s.frames[c.at] ? s.frames[c.at].t : lastT }));
+  const base = { idx, start: s.start, end: s.end, p, nValid: valid.length, calRef: ref, changes };
   if (valid.length < 60 || !p.scale || p.xRate == null) return { ...base, skipped: true, short: valid.length < 60 && !!p.scale && p.xRate != null };
   const scale = p.scale, E = (p.exposure || 2000) / 1000;
   const calDec = ref.calDec ?? p.calDec ?? p.dec;
   // without Dec nothing can be rescaled: the rate written in the log applies (and no "not rescaled" warning)
-  const rateRaTrue = p.decUnknown ? (p.xRate > 0 ? p.xRate : ref.calXRate ?? p.xRate) : (ref.calXRate ?? p.xRate) * cosd(p.dec) / cosd(calDec);
-  const rateDecTrue = ref.calYRate ?? p.yRate;
+  // calibration at the pole (19 Mar 2022 log: attempts at Dec -90): cos(Dec) ~ 0, the RA rate can't be rescaled from it
+  const poleCal = Math.abs(calDec) >= 85;
+  const rateRaTrue = p.decUnknown || poleCal ? (p.xRate > 0 ? p.xRate : ref.calXRate ?? p.xRate) : (ref.calXRate ?? p.xRate) * cosd(p.dec) / cosd(calDec);
+  // null when DEC was not calibrated: no DEC simulation and no DEC rate (DEC guide mode Off)
+  const rateDecTrue = (ref.calYRate > 0 ? ref.calYRate : null) ?? (p.yRate > 0 ? p.yRate : null);
+  const decGuided = rateDecTrue != null && p.decMode !== "Off" && p.yAlgo !== "None";
   // guide rate measured in calibration, in multiples of sidereal (RA referred to the equator)
-  const guideRa = (rateRaTrue * scale) / (SIDEREAL * cosd(p.dec)), guideDec = (rateDecTrue * scale) / SIDEREAL;
+  const guideRa = (rateRaTrue * scale) / (SIDEREAL * cosd(p.dec)), guideDec = rateDecTrue != null ? (rateDecTrue * scale) / SIDEREAL : null;
   const steady = valid.filter((f) => !f.settling);
   const raS = steady.map((f) => f.ra * scale), decS = steady.map((f) => f.dec * scale);
   const tot = raS.map((x, i) => Math.hypot(x, decS[i]));
@@ -1033,7 +1239,7 @@ function analyzeSession(s, idx, ref) {
   // no corrections sent: "guiding disabled", or guiding on but zero pulses (PHD2 desktop log
   // AstroBin 15 Aug 2024, S31-S32: RA error up to 106" and no pulses). Left out of recommendations, jumps and comparisons.
   const noPulse = !!p.guideOff || (steady.length >= 30 && steady.filter((f) => f.raDur || f.decDur).length < 0.02 * steady.length);
-  const jumps = !noPulse && steady.length >= 300 && steady[steady.length - 1].t - steady[0].t >= 600 ? findJumps(raS, decS, (steady[steady.length - 1].t - steady[0].t) / 3600, steady.map((f) => f.t)) : null;
+  const jumps = !noPulse && steady.length >= 300 && steady[steady.length - 1].t - steady[0].t >= 600 ? findJumps(raS, decS, (steady[steady.length - 1].t - steady[0].t) / 3600, steady.map((f) => f.t), steady.map((f) => f.snr)) : null;
   const series = { t: valid.map((f) => f.t), ra: valid.map((f) => f.ra * scale), dec: valid.map((f) => f.dec * scale), settling: valid.map((f) => f.settling) };
   const bands = []; let b0 = null;
   for (const f of valid) { if (f.settling && b0 === null) b0 = f.t; if (!f.settling && b0 !== null) { bands.push([b0, f.t]); b0 = null; } }
@@ -1064,7 +1270,7 @@ function analyzeSession(s, idx, ref) {
     dithers: s.events.filter((e) => e.dither).length, settleMed: median(bands.map((b) => b[1] - b[0])),
     rateRaTrue, rateDecTrue, guideRa, guideDec, calStart: ref.cal ? ref.cal.start : null, ditherRaRate: ditherRa.length >= 3 ? median(ditherRa) : null, ditherRaN: ditherRa.length,
     rateRatio: p.posBad ? 1 : p.xRate / rateRaTrue, perf, jumps, series, bands, blocks: sessionBlocks(s.frames, scale), noPulse,
-    runaway: noPulse ? null : runawayCheck(series, scale, s.frames.length, valid.length) };
+    runaway: noPulse ? null : runawayCheck(series, scale, s.frames.length, valid.length, { frames: valid, rate: rateRaTrue, dec: p.decUnknown ? null : p.dec }) };
   if (!useSegs.length || out.runaway) return { ...out, eligible: false };
 
   const segU = (g, axis) => {
@@ -1139,13 +1345,13 @@ function analyzeSession(s, idx, ref) {
   const actual = runRaFull(p.xAggr, maxRA, p.xRate); // log settings: RMS and behaviour in a single pass
   const sim = {
     measuredRa: segMeasured("ra"), measuredDec: segMeasured("dec"),
-    actualRa: actual.rms, actualDec: p.yAggr != null ? runDec(p.yAggr, maxDEC) : null,
+    actualRa: actual.rms, actualDec: p.yAggr != null && decGuided ? runDec(p.yAggr, maxDEC) : null,
     // behaviour predicted with the log settings (same rate used by ASIAIR): it should resemble the measured one
     actualBeh: actual.beh,
     fixedRa: runRa(p.xAggr, maxRA, rateRaTrue),
     // [aggressiveness, RMS, behaviour]
     curveRa: AGGRS.map((a) => { const r = runRaFull(a, maxRA, rateRaTrue); return [a, r.rms, r.beh]; }),
-    curveDec: p.yAggr != null ? AGGRS.map((a) => [a, runDec(a, maxDEC)]) : null,
+    curveDec: p.yAggr != null && decGuided ? AGGRS.map((a) => [a, runDec(a, maxDEC)]) : null,
   };
   // with "guiding disabled" (PHD2 desktop) the star is measured but no corrections are sent: the motion is useful for the
   // period, but the log settings didn't guide anything, so the phase is not used for the recommendations
@@ -1169,15 +1375,48 @@ function nightPeriod(results) {
     for (const [P, v] of s.peScan.scan) grid.set(P, (grid.get(P) || 0) + (w * v) / vmax);
     upTo = Math.max(upTo, s.peScan.upTo); n++;
   }
-  const P = pickPeriod([...grid.entries()].sort((a, b) => a[0] - b[0]));
+  const gridArr = [...grid.entries()].sort((a, b) => a[0] - b[0]);
+  const P = pickPeriod(gridArr);
   if (!P) return null;
+  // each run's own period, kept so that the night period can be applied again (settlePeriod)
+  for (const s of results) if (!s.skipped && s.peScan && s.pe && s.peOwnP == null) s.peOwnP = s.pe.period;
+  const pe = { period: P, auto: P, upTo, sessions: n, grid: gridArr };
+  applyPeriod(results, pe, P);
+  return pe;
+}
+// the night period P on every run's curve (runs too short for 3 cycles of P keep their own period)
+function applyPeriod(results, pe, P) {
+  pe.period = P;
   for (const s of results) {
-    if (s.skipped || !s.peScan || !s.pe) continue;
-    const own = s.pe.period;
-    if (s.peScan.upTo + 1e-9 >= P) { s.pe = peCurve(s.recon.T, s.peScan.hp, s.p.dec, P, s.peScan.upTo); s.pe.own = own; }
-    else s.pe.short = true; // session too short for 3 cycles of the night period
+    if (s.skipped || !s.peScan || s.peOwnP == null) continue;
+    if (s.peScan.upTo + 1e-9 >= P) { s.pe = peCurve(s.recon.T, s.peScan.hp, s.p.dec, P, s.peScan.upTo); s.pe.own = s.peOwnP; }
+    else { s.pe = peCurve(s.recon.T, s.peScan.hp, s.p.dec, s.peOwnP, s.peScan.upTo); s.pe.short = true; }
   }
-  return { period: P, upTo, sessions: n };
+}
+// With the mount chosen in the page, its stated period settles what the scores alone leave open (11 Nov 2026):
+// between the automatic choice, its half and its double, the one within 3% of a stated period wins if it scores at
+// least PE_MOUNT of the automatic choice. The automatic choice alone has a narrow margin (PE_HALF); a mount that
+// doesn't match any candidate changes nothing. Idempotent: called by renderAll and recommend.
+const PE_MOUNT = 0.6;
+function settlePeriod(A, setup) {
+  const pe = A.pe;
+  if (!pe || !pe.grid) return;
+  const m = mountByName(setup && setup.mount);
+  const at = (c) => { const near = pe.grid.filter((x) => Math.abs(x[0] - c) <= 0.03 * c); return near.length ? near.reduce((a, x) => (x[1] > a[1] ? x : a)) : null; };
+  const base = pe.grid.find((x) => x[0] === pe.auto)[1];
+  let P = pe.auto;
+  if (m) {
+    const exps = [m.period, m.alt].filter(Boolean);
+    if (!exps.some((e) => Math.abs(pe.auto / e - 1) < 0.03)) {
+      for (const e of exps) {
+        const c = [pe.auto / 2, pe.auto * 2].find((x) => Math.abs(x / e - 1) < 0.03);
+        const h = c != null ? at(c) : null;
+        if (h && h[1] >= PE_MOUNT * base) { P = h[0]; break; }
+      }
+    }
+  }
+  pe.byMount = P !== pe.auto;
+  if (P !== pe.period) applyPeriod(A.results, pe, P);
 }
 // The period is reliable if its double could also be checked (otherwise it might be
 // half the true one), or if it matches the one stated for the mount.
@@ -1268,7 +1507,13 @@ function analyzeText(text) {
   const results = sessions.map((s, i) => {
     const before = calibrations.slice(0, s.calN).filter(complete);
     let r;
-    if (s.p.yRate == null) r = before.length ? refOf(before[before.length - 1]) : ref; // log without rates in the header
+    // log without rates in the header, or DEC not calibrated (RA-only calibration, DEC Off): last calibration with RA
+    if (s.p.yRate == null) {
+      // only finished calibrations: a failed attempt can stop after the RA part with a meaningless rate
+      // (19 Mar 2022 log: 0.061 px/s at Dec -90)
+      const withRa = calibrations.slice(0, s.calN).filter((c) => c.done && c.results.some((x) => x.axis === "West"));
+      r = before.length ? refOf(before[before.length - 1]) : withRa.length ? refOf(withRa[withRa.length - 1]) : ref;
+    }
     else {
       const cal = before.filter((c) => same(yOf(c), s.p.yRate)).pop() || calOk.filter((c) => same(yOf(c), s.p.yRate)).pop();
       r = cal ? refOf(cal) : s.p.xRate != null ? headerRef(s) : ref;
@@ -1305,7 +1550,9 @@ function pickAggr(curve, current) {
   const inZone = current >= lo - 1e-9 && current <= hi + 1e-9;
   const gain = curPt[1] - rec[1];
   // allBounce: no value in the zone stays below FLIP_MAX; the lowest one (which bounces least) is proposed and the page says so
-  return { best, lo, hi, rec: rec[0], recRms: rec[1], curRms: curPt[1], inZone, gain, keep: (inZone || gain < 0.01) && calm(curPt), recBeh: rec[2] || null, curBeh: curPt[2] || null, allBounce: !zone.some(calm) };
+  // keep also when the value proposed is the current one (all values bounce and the current one bounces least)
+  const keep = ((inZone || gain < 0.01) && calm(curPt)) || Math.abs(rec[0] - curPt[0]) < 1e-9;
+  return { best, lo, hi, rec: rec[0], recRms: rec[1], curRms: curPt[1], inZone, gain, keep, recBeh: rec[2] || null, curBeh: curPt[2] || null, allBounce: !zone.some(calm) };
 }
 // sentence about the graph for the RA aggressiveness row (values predicted by the simulation)
 function behaviorNote(ra) {
@@ -1369,6 +1616,7 @@ function rateComparison(A) {
 }
 
 function recommend(A, setup) {
+  settlePeriod(A, setup); // the curves used for the max duration depend on the night period
   const eligibleAll = A.results.filter((r) => !r.skipped && r.eligible);
   if (!eligibleAll.length) return null;
   // PHD2 desktop: runs with algorithms the simulation doesn't know (PPEC, Lowpass2...) are left out when the night
@@ -1488,7 +1736,17 @@ function recommend(A, setup) {
   const oneDir = shares.length && shares.every((x) => x.dir === shares[0].dir && x.share >= 0.85);
   const sharesTxt = shares.map((x) => `${x.dir === "North" ? "N" : "S"} ${pf(x.share)}`).join(", ");
   const itDir = (d) => (d === "North" ? "Nord" : "Sud");
-  if (p.decMode === "North" || p.decMode === "South") {
+  if (p.decMode === "Off" || p.yAlgo === "None") {
+    // DEC not guided (3 Jul 2021 log: RA-only calibration, DEC RMS 6-12″): advise turning it on only if DEC really moves
+    const wq = (f) => Math.sqrt(list.reduce((a, s) => a + f(s) ** 2 * s.steadyN, 0) / W);
+    const decRms = wq((s) => s.perf.decRms), raRms = wq((s) => s.perf.raRms), on = decRms >= 1 && decRms > raRms;
+    rows.push({ param: T("Modo guida DEC", "DEC guide mode"), cur: "Off", rec: on ? T("Auto, ricalibrando", "Auto, recalibrating") : "Off", status: on ? "change" : "ok",
+      todo: T("La DEC non è guidata e si sposta: attiva la guida DEC e rifai la calibrazione.", "DEC is not guided and it moves: turn DEC guiding on and calibrate again."),
+      why: on
+        ? T(`La guida DEC è spenta e l'errore DEC (RMS ${fa(decRms)}) è più grande di quello RA (${fa(raRms)}): la deriva DEC non viene corretta. Metti il modo DEC su Auto e rifai la calibrazione: ASIAIR deve misurare anche la DEC.`,
+            `DEC guiding is off and the DEC error (RMS ${fa(decRms)}) is larger than the RA one (${fa(raRms)}): the DEC drift is not corrected. Set DEC mode to Auto and calibrate again: ASIAIR must measure DEC too.`)
+        : T(`Guida DEC spenta: l'errore DEC resta piccolo (RMS ${fa(decRms)}), va bene così.`, `DEC guiding off: the DEC error stays small (RMS ${fa(decRms)}), that's fine.`) });
+  } else if (p.decMode === "North" || p.decMode === "South") {
     // DEC guiding already in one direction only: corrections necessarily all go that way, so
     // the DEC error is what counts. If it moves away from zero, the drift goes the other way and nobody corrects it.
     const trend = list.reduce((a, s) => a + (s.decTrend || 0) * s.steadyN, 0) / W;
@@ -1512,15 +1770,23 @@ function recommend(A, setup) {
   // calibration
   const mism = list.filter((s) => Math.abs(s.rateRatio - 1) > 0.1);
   const cal = cr.cal || null;
-  const rateTarget = (cr.calXRate ?? p.xRate) * cosd(decMean) / cosd(cr.calDec ?? decMean);
+  const rateTarget = cr.calDec != null && Math.abs(cr.calDec) >= 85 ? last.rateRaTrue : (cr.calXRate ?? p.xRate) * cosd(decMean) / cosd(cr.calDec ?? decMean);
   const stepTarget = round50((25 / 12 / rateTarget) * 1000);
   const onTarget = Math.abs(decMean) <= 60;
   const misList = mism.map((s) => "S" + s.idx).join(", ");
-  rows.push({ param: T("Calibrazione", "Calibration"), cur: cal ? T(`${cal.step} ms a Dec ${fn(cal.dec, 0)}°`, `${cal.step} ms at Dec ${fn(cal.dec, 0)}°`) : "–",
-    todo: onTarget ? T("ASIAIR a volte riparte senza ricalcolare la velocità RA: se succede spesso, calibra direttamente sull'oggetto.", "ASIAIR sometimes restarts without recomputing the RA rate: if it happens often, calibrate directly on the target.")
+  // calibration made above 60° of declination (11 Nov 2026): there RA moves little per pulse (cos Dec) and the rate
+  // and angle are measured less precisely; at the pole (19 Mar 2022 log, Dec -90) it can't be measured at all
+  const highCal = !!cal && cal.dec != null && Math.abs(cal.dec) > 60;
+  const highIt = highCal ? `La calibrazione è stata fatta a Dec ${fn(cal.dec, 0)}°: ${Math.abs(cal.dec) >= 85 ? "al polo la RA non si sposta e la sua velocità non si può misurare" : "lassù la RA si sposta poco a ogni impulso (la velocità scala con il coseno della declinazione), quindi velocità e angolo vengono misurati con meno precisione"}. Meglio calibrare tra 20° e 40°, vicino al meridiano e dalla stessa parte dell'oggetto: ASIAIR poi adatta la velocità alla declinazione dell'oggetto. ` : "";
+  const highEn = highCal ? `The calibration was made at Dec ${fn(cal.dec, 0)}°: ${Math.abs(cal.dec) >= 85 ? "at the pole RA doesn't move and its rate can't be measured" : "up there RA moves little per pulse (the rate scales with the cosine of declination), so rate and angle are measured less precisely"}. Better calibrate between 20° and 40°, near the meridian and on the same side as the target: ASIAIR then adapts the rate to the target's declination. ` : "";
+  rows.push({ param: T("Calibrazione", "Calibration"), cur: cal ? (cal.dec != null ? T(`${cal.step} ms a Dec ${fn(cal.dec, 0)}°`, `${cal.step} ms at Dec ${fn(cal.dec, 0)}°`) : `${cal.step} ms`) : "–",
+    todo: highCal && !mism.length ? T("Calibrazione fatta troppo vicino al polo: rifalla tra 20° e 40° di declinazione, vicino al meridiano.", "Calibration made too close to the pole: redo it between 20° and 40° declination, near the meridian.")
+      : onTarget ? T("ASIAIR a volte riparte senza ricalcolare la velocità RA: se succede spesso, calibra direttamente sull'oggetto.", "ASIAIR sometimes restarts without recomputing the RA rate: if it happens often, calibrate directly on the target.")
       : T("ASIAIR a volte riparte senza ricalcolare la velocità RA: calibra tra 20° e 40° di declinazione vicino al meridiano e controlla qui ogni notte.", "ASIAIR sometimes restarts without recomputing the RA rate: calibrate between 20° and 40° declination near the meridian and check here every night."),
-    rec: mism.length ? (onTarget ? T(`sull'oggetto, ~${stepTarget} ms`, `on the target, ~${stepTarget} ms`) : T("Dec 20–40°, vicino al meridiano", "Dec 20–40°, near the meridian")) : (cal ? `${cal.step} ms` : `~${stepTarget} ms`), status: mism.length ? "warn" : "ok",
-    why: mism.length
+    rec: mism.length ? (onTarget ? T(`sull'oggetto, ~${stepTarget} ms`, `on the target, ~${stepTarget} ms`) : T("Dec 20–40°, vicino al meridiano", "Dec 20–40°, near the meridian"))
+      : highCal ? T("Dec 20–40°, vicino al meridiano", "Dec 20–40°, near the meridian") : (cal ? `${cal.step} ms` : `~${stepTarget} ms`),
+    status: mism.length ? "warn" : highCal ? "change" : "ok",
+    why: T(highIt, highEn) + (mism.length
       ? T(`In ${misList} la velocità RA misurata non corrisponde alla calibrazione (correzioni ${alPc(1 / mism[0].rateRatio)} del dovuto): probabilmente ASIAIR ha ripreso la guida senza ricalcolarla per la declinazione. `,
           `In ${misList} the measured RA rate doesn't match the calibration (corrections at ${pf(1 / mism[0].rateRatio)} of what was needed): ASIAIR probably resumed guiding without recomputing it for the declination. `) +
         (onTarget
@@ -1529,16 +1795,19 @@ function recommend(A, setup) {
           : T("L'oggetto è troppo vicino al polo per calibrarci sopra: calibra tra 20° e 40° vicino al meridiano e controlla qui ogni notte.",
               "The target is too close to the pole to calibrate on it: calibrate between 20° and 40° near the meridian and check here every night."))
       : T(`Velocità RA corretta per la declinazione in tutte le fasi di guida. Passi usati: ${cal ? `${cal.steps.West} RA, ${cal.steps.North} DEC` : "–"}.`,
-          `RA rate correctly adjusted for declination in all guiding runs. Steps used: ${cal ? `${cal.steps.West} RA, ${cal.steps.North} DEC` : "–"}.`) });
+          `RA rate correctly adjusted for declination in all guiding runs. Steps used: ${cal ? `${cal.steps.West} RA, ${cal.steps.North} DEC` : "–"}.`)) });
 
   // polar alignment
+  // A polar error e makes DEC drift by at most e x sidereal rate (0.2625″/min per arcminute) at any declination:
+  // how much of it shows depends on the hour angle relative to the direction of the error. So 3.81 x drift is a
+  // MINIMUM error, never an estimate of the error itself (no 1/cos(Dec) factor: checked 11 Nov 2026).
   // true DEC drift: the part corrected by guiding plus the part left in the error (one-direction guiding)
   const decDrift = Math.max(...list.map((s) => Math.abs(s.netDrift.decTot ?? s.netDrift.dec)));
   const paMin = 3.81 * decDrift;
   rows.push({ param: T("Stazionamento polare", "Polar alignment"), cur: T(`deriva DEC ${fa(decDrift)}/min`, `DEC drift ${fa(decDrift)}/min`), rec: paMin > 3 ? T("rifallo con più cura", "redo it more carefully") : T("va bene", "fine"), status: paMin > 5 ? "warn" : paMin > 3 ? "change" : "ok",
     todo: T(`L'errore di stazionamento è di almeno ${fn(paMin, 1)}′: sotto i 2–3′ la DEC lavora meno e la guida è più tranquilla.`, `The polar alignment error is at least ${fn(paMin, 1)}′: below 2–3′ DEC works less and guiding is calmer.`),
-    why: T(`Una deriva DEC di ${fa(decDrift)}/min corrisponde a un errore di stazionamento di almeno ${fn(paMin, 1)}′, se viene tutta dallo stazionamento (flessioni e rifrazione possono aggiungerne un po'). ${paMin > 3 ? "Sotto i 2–3′ la DEC lavora meno e la guida è più tranquilla." : "Errore piccolo, nessuna azione necessaria."}`,
-      `A DEC drift of ${fa(decDrift)}/min means a polar alignment error of at least ${fn(paMin, 1)}′, if all of it comes from polar alignment (flexure and refraction can add a little). ${paMin > 3 ? "Below 2–3′ DEC works less and guiding is calmer." : "Small error, no action needed."}`) });
+    why: T(`Una deriva DEC di ${fa(decDrift)}/min corrisponde a un errore di stazionamento di almeno ${fn(paMin, 1)}′, se viene tutta dallo stazionamento (flessioni e rifrazione possono aggiungerne un po'). È un minimo: la stessa deriva può venire da un errore più grande, a seconda di dove punta il telescopio rispetto alla direzione dell'errore. ${paMin > 3 ? "Sotto i 2–3′ la DEC lavora meno e la guida è più tranquilla." : "Errore piccolo, nessuna azione necessaria."}`,
+      `A DEC drift of ${fa(decDrift)}/min means a polar alignment error of at least ${fn(paMin, 1)}′, if all of it comes from polar alignment (flexure and refraction can add a little). It's a minimum: the same drift can come from a larger error, depending on where the telescope points relative to the direction of the error. ${paMin > 3 ? "Below 2–3′ DEC works less and guiding is calmer." : "Small error, no action needed."}`) });
 
   // guide rate: likely step (the ASIAIR step closest to the measured rate) and whether it has margin
   {
@@ -1549,7 +1818,7 @@ function recommend(A, setup) {
     const p99 = Math.max(...same.map((s) => Math.max(s.perf.raP99, s.perf.decP99)));
     const atMaxR = Math.max(...same.map((s) => Math.max(s.perf.raAtMax, s.perf.decAtMax)));
     const frac = p99 / cycle;
-    const dev = Math.max(Math.abs(gRa / nominal - 1), Math.abs(gDec / nominal - 1));
+    const dev = Math.max(Math.abs(gRa / nominal - 1), gDec != null ? Math.abs(gDec / nominal - 1) : 0);
     const settleS = median(same.filter((s) => s.dithers).map((s) => s.settleMed).filter(isFinite));
     const tooLow = next && (frac > 0.4 || atMaxR > 0.01);
     const veryShort = nominal >= 0.75 && p99 < 100;
@@ -1564,7 +1833,7 @@ function recommend(A, setup) {
       ` The measured rate is ${pf(dev)} away from the nearest setting: check which rate is set in ASIAIR, or recalibrate.`);
     why += T(" Per scegliere sul campo: nella stessa notte guida 20–30 minuti per ogni velocità, ricalibrando a ogni cambio, e apri qui il log: la pagina confronta le velocità.",
       " To choose in the field: in one night guide 20–30 minutes at each rate, recalibrating after each change, and open the log here: the page compares the rates.");
-    rows.push({ param: T("Velocità di guida", "Guide rate"), cur: `RA ${fn(gRa, 2)}× · DEC ${fn(gDec, 2)}×`, rec: tooLow ? `${fn(next, 2)}×` : T(`invariata (${fn(nominal, 2)}×)`, `unchanged (${fn(nominal, 2)}×)`),
+    rows.push({ param: T("Velocità di guida", "Guide rate"), cur: `RA ${fn(gRa, 2)}×` + (gDec != null ? ` · DEC ${fn(gDec, 2)}×` : ""), rec: tooLow ? `${fn(next, 2)}×` : T(`invariata (${fn(nominal, 2)}×)`, `unchanged (${fn(nominal, 2)}×)`),
       todo: dev > 0.15 ? T("La velocità misurata non corrisponde a nessuno dei valori di ASIAIR: controlla quale è impostata in ASIAIR, poi rifai la calibrazione.", "The measured rate matches no setting: check which one is set in ASIAIR, then recalibrate.")
         : T("Gli impulsi sono lunghi rispetto alla posa di guida: con la velocità più alta le correzioni arrivano prima. Dopo il cambio rifai la calibrazione.", "Pulses are long compared with the guide exposure: with the higher rate corrections arrive sooner. Recalibrate after the change."),
       status: dev > 0.15 ? "warn" : tooLow ? "change" : "ok", why });
@@ -1772,6 +2041,7 @@ const statusText = (s) => ({ ok: T("va bene", "fine"), change: T("da cambiare", 
 function renderAll() {
   const out = document.getElementById("out");
   const A = state.A, setup = readSetup();
+  settlePeriod(A, setup); // before anything reads the period (tiles, jumps, curves)
   out.replaceChildren();
   const okSessions = A.results.filter((r) => !r.skipped);
   // the page refreshes by itself only with the folder connected and the box ticked
@@ -1830,6 +2100,8 @@ function renderAll() {
     peSub = (peS.length ? T(`${fa(mean(peS.map((s) => s.pe.p2pEq)), 1)} p-p equatoriali`, `${fa(mean(peS.map((s) => s.pe.p2pEq)), 1)} p-p equatorial`) : "") + sheetTxt;
     if (ps.exp) peSub += T(` · dichiarato ${fn(ps.exp, 0)} s`, ` · stated ${fn(ps.exp, 0)} s`);
   }
+  // period settled with the mount's stated one: say what the log alone suggested
+  if (A.pe?.byMount) peSub += T(` · da solo il log indicava ${fn(A.pe.auto, 0)} s, la montatura scelta conferma questo`, ` · the log alone suggested ${fn(A.pe.auto, 0)} s, the mount chosen confirms this one`);
   tiles.append(tile(T("Periodo errore RA", "RA error period"), ps ? fn(ps.P, 0) : "–", "s", peSub));
   tiles.append(tile(T("Dither", "Dithers"), String(dith), "", dith ? T(`Assestamento mediano ${fn(settle, 0)} s`, `Median settling ${fn(settle, 0)} s`) : T("Nessun dither", "No dithers")));
   night.append(tiles);
@@ -1919,11 +2191,16 @@ function renderAll() {
     const sec = el("section", {}, el("div", { class: "sechead" }, el("h2", { text: T("Calibrazione", "Calibration") }), el("p", { text: T(`${A.calibrations.length} tentativi, usata quella delle ${hhmm(cal.start)}`, `${A.calibrations.length} attempts, using the one at ${hhmm(cal.start)}`) })));
     const w = cal.results.find((r) => r.axis === "West"), n = cal.results.find((r) => r.axis === "North");
     const sc = A.results.find((r) => r.p?.scale)?.p.scale || 1;
-    const ortho = Math.abs(Math.abs(w.angle - n.angle) - 90);
+    // RA-only calibration (DEC guide mode Off, 3 Jul 2021 log): no DEC rate and no orthogonality
+    const ortho = n ? Math.abs(Math.abs(w.angle - n.angle) - 90) : null;
     const t = el("div", { class: "tiles" });
-    t.append(tile(T("Velocità RA", "RA rate"), fn((w.rate * sc) / (SIDEREAL * cosd(cal.dec)), 2), "× sid.", T(`${fn(w.rate, 3)} px/s a Dec ${fn(cal.dec, 1)}° · ${cal.steps.West} passi`, `${fn(w.rate, 3)} px/s at Dec ${fn(cal.dec, 1)}° · ${cal.steps.West} steps`)));
-    t.append(tile(T("Velocità DEC", "DEC rate"), fn((n.rate * sc) / SIDEREAL, 2), "× sid.", T(`${fn(n.rate, 3)} px/s · ${cal.steps.North} passi`, `${fn(n.rate, 3)} px/s · ${cal.steps.North} steps`)));
-    t.append(tile(T("Ortogonalità assi", "Axis orthogonality"), fn(ortho, 1), "°", ortho < 5 ? T("Fuori squadra di poco: ok", "Only slightly off square: ok") : T("Assi poco ortogonali: ricalibra", "Axes not orthogonal enough: recalibrate")));
+    const atDec = cal.dec != null ? T(` a Dec ${fn(cal.dec, 1)}°`, ` at Dec ${fn(cal.dec, 1)}°`) : "";
+    // usable declination for the RA rate and the step table (unknown with ST4 guiding, meaningless at the pole)
+    const decOk = cal.dec != null && Math.abs(cal.dec) < 85;
+    t.append(tile(T("Velocità RA", "RA rate"), decOk || cal.dec == null ? fn((w.rate * sc) / (SIDEREAL * cosd(cal.dec ?? 0)), 2) : "–", "× sid.", T(`${fn(w.rate, 3)} px/s${atDec} · ${cal.steps.West} passi`, `${fn(w.rate, 3)} px/s${atDec} · ${cal.steps.West} steps`)));
+    t.append(n ? tile(T("Velocità DEC", "DEC rate"), fn((n.rate * sc) / SIDEREAL, 2), "× sid.", T(`${fn(n.rate, 3)} px/s · ${cal.steps.North} passi`, `${fn(n.rate, 3)} px/s · ${cal.steps.North} steps`))
+      : tile(T("Velocità DEC", "DEC rate"), "–", "", T("DEC non calibrata (guida DEC spenta)", "DEC not calibrated (DEC guiding off)")));
+    if (n) t.append(tile(T("Ortogonalità assi", "Axis orthogonality"), fn(ortho, 1), "°", ortho < 5 ? T("Fuori squadra di poco: ok", "Only slightly off square: ok") : T("Assi poco ortogonali: ricalibra", "Axes not orthogonal enough: recalibrate")));
     t.append(tile(T("Passo usato", "Step used"), String(cal.step), "ms", cal.steps.West >= 8 && cal.steps.West <= 25 ? T("Numero di passi adeguato", "Adequate number of steps") : T("Troppi o troppo pochi passi", "Too many or too few steps")));
     sec.append(t);
 
@@ -1937,7 +2214,7 @@ function renderAll() {
         `Duration of each pulse to move the star about 25 px in 12 RA steps, with the measured guide rate (${fn(w.rate, 3)} px/s at Dec ${fn(cal.dec, 1)}°). Only declination matters, and a target keeps it all night; altitude and hour angle don't change the step. If ASIAIR says the star moves too little, lengthen the step according to the table. Above 60° DEC also takes few steps and calibration becomes imprecise: better calibrate between 20° and 40°, within 1–2 hours of the meridian, on the same side as the target and at least 30° above the horizon.`) }));
     const tb2 = el("tbody");
     for (const d of decs) {
-      const r = rate0 * cosd(d), step = round50((25 / 12 / r) * 1000), decSteps = Math.ceil(25 / ((n.rate * step) / 1000));
+      const r = rate0 * cosd(d), step = round50((25 / 12 / r) * 1000), decSteps = n ? Math.ceil(25 / ((n.rate * step) / 1000)) : "–";
       const isTarget = targetDecs.includes(d);
       const notes = [];
       if (isTarget) notes.push(T("declinazione dell'oggetto nel log", "target declination in the log"));
@@ -1951,7 +2228,8 @@ function renderAll() {
     const cw = el("div", { class: "tablewrap" }); cw.style.border = "0";
     cw.append(el("table", {}, el("thead", {}, el("tr", {}, ...T(["Dec", "Velocità RA", "Passo", "Passi DEC", "Note"], ["Dec", "RA rate", "Step", "DEC steps", "Notes"]).map((h, i) => el("th", { class: i < 4 ? "n" : "", text: h })))), tb2));
     cc.append(cw);
-    sec.append(cc);
+    // without the calibration declination (guiding via ST4, no mount position) the table can't be computed
+    if (decOk) sec.append(cc);
     out.append(sec);
   }
 
@@ -2018,7 +2296,7 @@ function earlyWarnings(S) {
   if (S.netDrift && S.span >= 600) {
     const drift = Math.abs(S.netDrift.decTot ?? S.netDrift.dec), paMin = 3.81 * drift;
     if (paMin > 5) out.push({ param: T("Stazionamento polare", "Polar alignment"), set: T(`errore di almeno ${fn(paMin, 0)}′`, `error of at least ${fn(paMin, 0)}′`),
-      why: T(`La DEC deriva di ${fa(drift)}/min (stima che vale se la deriva viene dallo stazionamento). Rifai lo stazionamento polare appena puoi: sotto i 2–3′ la DEC lavora meno e la guida è più tranquilla.`, `DEC drifts by ${fa(drift)}/min (the estimate assumes the drift comes from polar alignment). Redo the polar alignment when you can: below 2–3′ DEC works less and guiding is calmer.`) });
+      why: T(`La DEC deriva di ${fa(drift)}/min (stima che vale se la deriva viene dallo stazionamento; è un minimo, perché la deriva dipende anche da dove punta il telescopio). Rifai lo stazionamento polare appena puoi: sotto i 2–3′ la DEC lavora meno e la guida è più tranquilla.`, `DEC drifts by ${fa(drift)}/min (the estimate assumes the drift comes from polar alignment; it's a minimum, because the drift also depends on where the telescope points). Redo the polar alignment when you can: below 2–3′ DEC works less and guiding is calmer.`) });
     const oneWay = p.decMode === "North" || p.decMode === "South";
     const need = Math.abs(S.decTrend || 0) > 0.1 ? (S.decTrend > 0 ? "South" : "North") : null;
     if (oneWay && need && need !== p.decMode) out.push({ param: T("Modo guida DEC", "DEC guide mode"), set: `${p.decMode} → Auto`,
@@ -2083,7 +2361,16 @@ function noPulseWarning(list) {
 function runawayWarning(list) {
   const run = list.filter((s) => s.runaway);
   if (!run.length) return null;
-  const r = run[0], R = r.runaway, ids = run.map((s) => "S" + s.idx).join(", ");
+  const r = run[0], R = r.runaway;
+  const ids = run.length > 8 ? run.slice(0, 6).map((s) => "S" + s.idx).join(", ") + T(` e altre ${run.length - 6} fasi`, ` and ${run.length - 6} more runs`) : run.map((s) => "S" + s.idx).join(", ");
+  // mount not tracking: in most of the runs the motion without guiding moves at the sky's speed
+  const nt = run.filter((s) => s.runaway.noTrack);
+  if (nt.length >= Math.max(1, run.length / 2)) {
+    const drift = median(nt.map((s) => s.runaway.drift)), sky = median(nt.map((s) => s.runaway.sky));
+    return { param: T("La montatura non insegue", "The mount isn't tracking"),
+      why: T(`In ${ids} l'errore RA cresce di continuo (fino a ${fn(Math.max(...run.map((s) => s.runaway.peak)), 0)}″) con le correzioni sempre al massimo. Senza le correzioni la stella si sarebbe spostata di circa ${fn(drift, 1)}″ al secondo: quanto la rotazione del cielo a questa declinazione (${fn(sky, 1)}″/s). Quindi la montatura non stava inseguendo, e la guida non può sostituire l'inseguimento. Controlla che l'inseguimento sia acceso e alla velocità siderale (non lunare o solare) e che la montatura non si sia fermata per un limite o un errore. Queste fasi non entrano nei consigli.`,
+        `In ${ids} the RA error keeps growing (up to ${fn(Math.max(...run.map((s) => s.runaway.peak)), 0)}″) with the corrections always at the maximum. Without the corrections the star would have moved by about ${fn(drift, 1)}″ per second: as fast as the sky turns at this declination (${fn(sky, 1)}″/s). So the mount wasn't tracking, and guiding can't replace tracking. Check that tracking is on and at sidereal rate (not lunar or solar) and that the mount didn't stop at a limit or on an error. These runs are left out of the advice.`) };
+  }
   // a later run with another calibration that guided normally
   const after = list.find((s) => s.idx > r.idx && !s.runaway && !s.noPulse && s.calStart && s.calStart !== r.calStart);
   const lostIt = R.lost >= 0.2 ? `, e la stella si è persa ${artPc(R.lost, "nel")} dei frame` : "", lostEn = R.lost >= 0.2 ? `, and the star was lost in ${pf(R.lost)} of frames` : "";
@@ -2121,16 +2408,18 @@ function renderSimple(A, R, list, totRms, imgScale) {
   const J = jumpSummary(A);
   if (J) {
     const jt = jumpText(J);
-    sec.append(el("div", { class: "sechead" }, el("h2", { text: T("Prima di tutto: la montatura", "First of all: the mount") }),
+    sec.append(el("div", { class: "sechead" }, el("h2", { text: J.both ? T("Prima di tutto: i salti", "First of all: the jumps") : T("Prima di tutto: la montatura", "First of all: the mount") }),
       el("p", { text: T("Un problema che le impostazioni di guida non possono risolvere.", "A problem the guiding settings can't fix.") })));
     sec.append(el("ol", { class: "todo" }, el("li", {}, el("b", { text: jt.param }), el("span", { class: "set", text: jt.set }), el("span", { class: "why", text: jt.why }))));
   }
-  // night that gets worse (clouds, dew, low target): settings can't fix this either
+  // night that gets worse (usually clouds, dew, low target): the log doesn't say why
   const NT = nightTrend(A);
   if (NT) {
     const tt = trendText(NT);
-    sec.append(el("div", { class: "sechead" }, el("h2", { text: T("Prima di tutto: il cielo", "First of all: the sky") }),
-      el("p", { text: T("Un peggioramento che le impostazioni di guida non possono risolvere.", "A change for the worse the guiding settings can't fix.") })));
+    sec.append(el("div", { class: "sechead" }, el("h2", { text: T("Prima di tutto: la notte", "First of all: the night") }),
+      el("p", { text: NT.changed.length
+        ? T("Un peggioramento che può venire dal cielo o dalle impostazioni cambiate.", "A change for the worse that may come from the sky or from the changed settings.")
+        : T("Un peggioramento che di solito non dipende dalle impostazioni di guida.", "A change for the worse that usually doesn't come from the guiding settings.") })));
     sec.append(el("ol", { class: "todo" }, el("li", {}, el("b", { text: tt.param }), el("span", { class: "set", text: tt.set }), el("span", { class: "why", text: tt.why }))));
   }
   if (!R) {
@@ -2244,6 +2533,10 @@ function renderSession(S, setup, imgScale) {
     "Mount position not valid in the log (Dec 90°, unknown pier side): the RA rate actually used can't be reconstructed, so this guiding run is left out of the advice."));
   add("ok", T(`Dec ${p.posBad ? "?" : p.decUnknown ? "? (non nel log, presa uguale alla calibrazione)" : fn(p.dec, 1) + "°"}, posa di guida ${fn((p.exposure || 0) / 1000, 1)} s, aggressività RA ${pc(p.xAggr)} / DEC ${pc(p.yAggr)}, durata massima ${p.maxRA}/${p.maxDEC} ms, modo DEC ${p.decMode || "–"}.`,
     `Dec ${p.posBad ? "?" : p.decUnknown ? "? (not in the log, taken as the calibration's)" : fn(p.dec, 1) + "°"}, guide exposure ${fn((p.exposure || 0) / 1000, 1)} s, aggressiveness RA ${pc(p.xAggr)} / DEC ${pc(p.yAggr)}, max duration ${p.maxRA}/${p.maxDEC} ms, DEC mode ${p.decMode || "–"}.`));
+  // aggressiveness changed during the run (not written by ASIAIR, found from the corrections in the log)
+  const midTxt = [p.xAggrSet != null ? `RA ${pc(p.xAggrSet)} → ${pc(p.xAggr)}` : null, p.yAggrSet != null ? `DEC ${pc(p.yAggrSet)} → ${pc(p.yAggr)}` : null].filter(Boolean).join(", ");
+  if (midTxt) add("change", T(`Aggressività cambiata durante questa fase (${midTxt}): il log riporta solo il valore iniziale, quello finale si ricava dalle correzioni registrate. I consigli partono dal valore finale.`,
+    `Aggressiveness changed during this run (${midTxt}): the log only shows the starting value, the final one comes from the recorded corrections. The advice starts from the final value.`));
   if (Math.abs(S.rateRatio - 1) > 0.1) add("warn", T(`ASIAIR ha usato ${fn(p.xRate, 3)} px/s per la RA, ma a questa declinazione la velocità vera è ${fn(S.rateRaTrue, 3)} px/s${S.ditherRaRate ? ` (misurata sui dither: ${fn(S.ditherRaRate, 3)})` : ""}. Le correzioni RA erano ${alPc(1 / S.rateRatio)} del dovuto.`,
     `ASIAIR used ${fn(p.xRate, 3)} px/s for RA, but at this declination the true rate is ${fn(S.rateRaTrue, 3)} px/s${S.ditherRaRate ? ` (measured on dithers: ${fn(S.ditherRaRate, 3)})` : ""}. RA corrections were at ${pf(1 / S.rateRatio)} of what was needed.`));
   else if (S.ditherRaRate) add("ok", T(`Velocità RA corretta per la declinazione: ${fn(p.xRate, 3)} px/s, confermata dai dither (${fn(S.ditherRaRate, 3)} px/s).`, `RA rate correctly adjusted for declination: ${fn(p.xRate, 3)} px/s, confirmed by the dithers (${fn(S.ditherRaRate, 3)} px/s).`));
